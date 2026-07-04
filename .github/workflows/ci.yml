@@ -1,0 +1,137 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: Tests (PHP ${{ matrix.php }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.3', '8.4']
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: mbstring, dom, fileinfo, curl, bcmath, pdo_sqlite, sqlite3
+          coverage: none
+          tools: composer:v2
+
+      # tsitsishvili/* are public on Packagist but their zipballs come from the
+      # GitHub API; authenticate Composer with the built-in token to dodge rate limits.
+      - name: Authenticate Composer
+        run: composer config --global github-oauth.github.com "${{ secrets.GITHUB_TOKEN }}"
+
+      - name: Get Composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Composer packages
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: composer-${{ matrix.php }}-${{ hashFiles('**/composer.lock') }}
+          restore-keys: composer-${{ matrix.php }}-
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Prepare application
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      # Tests run on in-memory SQLite (see phpunit.xml), so no DB service is needed.
+      - name: Run test suite
+        run: composer test
+
+  docs:
+    name: API docs (documentator)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, dom, fileinfo, curl, bcmath, pdo_sqlite, sqlite3
+          coverage: none
+          tools: composer:v2
+
+      - name: Authenticate Composer
+        run: composer config --global github-oauth.github.com "${{ secrets.GITHUB_TOKEN }}"
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Prepare application
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          mkdir -p build/api-docs
+
+      # The commands only scan routes/FormRequests/Resources, so no DB is needed.
+      - name: Generate cached OpenAPI spec
+        run: php artisan documentator:generate
+
+      - name: Export OpenAPI document
+        run: php artisan documentator:export build/api-docs/openapi.json
+
+      # Known upstream bug: documentator:postman throws a TypeError whenever the
+      # API declares security schemes (this app does, via config('documentator.security')).
+      # Root-caused and fixed locally but not yet released, so surface it as a
+      # warning instead of failing the build. Remove continue-on-error once the
+      # package ships the fix.
+      - name: Export Postman collection
+        continue-on-error: true
+        run: php artisan documentator:postman build/api-docs/collection.json
+
+      - name: Upload API docs
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-docs
+          path: build/api-docs/
+          if-no-files-found: error
+
+  lint:
+    name: Code style (Pint)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+          tools: composer:v2
+
+      - name: Authenticate Composer
+        run: composer config --global github-oauth.github.com "${{ secrets.GITHUB_TOKEN }}"
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Check code style
+        run: vendor/bin/pint --test
