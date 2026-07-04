@@ -135,3 +135,111 @@ jobs:
 
       - name: Check code style
         run: vendor/bin/pint --test
+
+  elastic-audit:
+    name: Elastic Audit (live ES)
+    runs-on: ubuntu-latest
+
+    # The package's PHPUnit tests (tests/Feature/Packages/*ElasticAudit*, *HttpLog*)
+    # run against an in-memory recorder, so the real index-management commands
+    # never touch a cluster. This job is the live counterpart — the analog of the
+    # `docs` job for the other package: it drives every elastic-audit artisan
+    # command against a throwaway Elasticsearch and asserts the indexes, aliases,
+    # and ILM policy actually land.
+    services:
+      elasticsearch:
+        # elasticsearch-php is pinned to v9 (composer.lock); the client sends a
+        # `compatible-with=9` header that an ES 8.x server rejects, so the server
+        # major must track the client. Bump this alongside the composer dep.
+        image: docker.elastic.co/elasticsearch/elasticsearch:9.0.0
+        ports:
+          - 9200:9200
+        env:
+          discovery.type: single-node
+          xpack.security.enabled: 'false'
+          xpack.license.self_generated.type: basic
+          ES_JAVA_OPTS: -Xms1g -Xmx1g
+
+    env:
+      LOG_ELASTICSEARCH_HOST: 127.0.0.1
+      LOG_ELASTICSEARCH_PORT: '9200'
+      LOG_ELASTICSEARCH_SCHEME: http
+      LOG_ELASTICSEARCH_INDEX_PREFIX: ci_logs
+      # Single-node cluster: no replicas, so the log indexes stay green.
+      LOG_ELASTICSEARCH_REPLICAS: '0'
+      # Enable the HTTP-logs subsystem so elastic-audit:health verifies its
+      # aliases too (activity logs are enabled by default). Lifecycle is left
+      # disabled (the default), so indexes aren't bound to ILM and the run stays
+      # deterministic — the lifecycle-policy command below still exercises the
+      # ILM PUT path on its own.
+      HTTP_LOGS_ENABLED: 'true'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, dom, fileinfo, curl, bcmath, pdo_sqlite, sqlite3
+          coverage: none
+          tools: composer:v2
+
+      - name: Authenticate Composer
+        run: composer config --global github-oauth.github.com "${{ secrets.GITHUB_TOKEN }}"
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Prepare application
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      # The ES image ships without curl, so the service can't self-health-check;
+      # poll from the runner until the cluster answers (yellow is sufficient).
+      - name: Wait for Elasticsearch
+        run: |
+          for i in $(seq 1 30); do
+            if curl -fsS "http://127.0.0.1:9200/_cluster/health?wait_for_status=yellow&timeout=5s" >/dev/null; then
+              echo "Elasticsearch is up."
+              exit 0
+            fi
+            echo "Waiting for Elasticsearch ($i/30)..."
+            sleep 5
+          done
+          echo "Elasticsearch did not become ready in time." >&2
+          exit 1
+
+      # Create the ILM policy first (verifies the ILM PUT path), then the physical
+      # indexes plus read/write aliases for both subsystems.
+      - name: Create lifecycle policy and indexes
+        run: |
+          php artisan elastic-audit:lifecycle-policy
+          php artisan http-logs:create-index
+          php artisan activity-logs:create-index
+
+      # Passes only if both subsystems' read/write aliases resolve and their
+      # queues are configured.
+      - name: Health check
+        run: php artisan elastic-audit:health
+
+      # Fresh indexes: rollover conditions aren't met and there's nothing to
+      # prune, but every command must still exit cleanly.
+      - name: Rollover and prune
+        run: |
+          php artisan http-logs:rollover
+          php artisan activity-logs:rollover
+          php artisan http-logs:prune
+          php artisan activity-logs:prune
+
+      # Independent assertion that the commands mutated the cluster rather than
+      # just exiting 0. Names derive from LOG_ELASTICSEARCH_INDEX_PREFIX above.
+      - name: Verify Elasticsearch state
+        run: |
+          set -e
+          curl -fsS "http://127.0.0.1:9200/_alias/ci_logs_http_logs_write" >/dev/null
+          curl -fsS "http://127.0.0.1:9200/_alias/ci_logs_activity_logs_write" >/dev/null
+          curl -fsS "http://127.0.0.1:9200/_ilm/policy/ci_logs_elastic_audit_policy" >/dev/null
+          echo "Aliases and ILM policy present."
