@@ -7015,16 +7015,16 @@
         },
         {
             "name": "tsitsishvili/documentator",
-            "version": "v1.6.1",
+            "version": "v1.6.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/tsitsishvili/documentator.git",
-                "reference": "18e34b0cd536fcc5b23d10890055673f70e25f4d"
+                "reference": "b83719d31f61d3e9675422c302f1ac010b3cb233"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/tsitsishvili/documentator/zipball/18e34b0cd536fcc5b23d10890055673f70e25f4d",
-                "reference": "18e34b0cd536fcc5b23d10890055673f70e25f4d",
+                "url": "https://api.github.com/repos/tsitsishvili/documentator/zipball/b83719d31f61d3e9675422c302f1ac010b3cb233",
+                "reference": "b83719d31f61d3e9675422c302f1ac010b3cb233",
                 "shasum": ""
             },
             "require": {
@@ -7083,9 +7083,9 @@
             ],
             "support": {
                 "issues": "https://github.com/tsitsishvili/documentator/issues",
-                "source": "https://github.com/tsitsishvili/documentator/tree/v1.6.1"
+                "source": "https://github.com/tsitsishvili/documentator/tree/v1.6.2"
             },
-            "time": "2026-07-04T09:19:35+00:00"
+            "time": "2026-07-04T10:29:36+00:00"
         },
         {
             "name": "tsitsishvili/elastic-audit",
@@ -9763,5 +9763,5 @@
         "php": "^8.3"
     },
     "platform-dev": {},
-    "plugin-api-version": "2.6.0"
+    "plugin-api-version": "2.9.0"
 }
