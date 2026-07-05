@@ -18,9 +18,4 @@ enum Provider: string implements ProviderContract
 
     // Outbound integrations we call ourselves.
     case Catalog = 'catalog';
-
-    public function getValue(): string
-    {
-        return $this->value;
-    }
 }

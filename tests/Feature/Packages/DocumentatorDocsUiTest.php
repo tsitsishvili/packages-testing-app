@@ -18,6 +18,11 @@ class DocumentatorDocsUiTest extends TestCase
     {
         parent::setUp();
 
+        // Docs routes are opt-in as of documentator 1.6.3 (disabled by default);
+        // enable them so the happy-path assertions below can reach the UI. The
+        // disable path is still exercised by test_docs_are_hidden_when_disabled.
+        config(['documentator.enabled' => true]);
+
         // Build the spec live so tests never depend on a stale cache file.
         config(['documentator.cache.enabled' => false]);
     }

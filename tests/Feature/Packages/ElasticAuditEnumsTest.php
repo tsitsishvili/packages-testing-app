@@ -25,13 +25,19 @@ class ElasticAuditEnumsTest extends TestCase
         $this->assertInstanceOf(ProviderContract::class, Provider::Stripe);
         $this->assertInstanceOf(EventTypeContract::class, EventType::PaymentSucceeded);
         $this->assertInstanceOf(EntityTypeContract::class, EntityType::Order);
+
+        // As of package v3 the contracts extend PHP's BackedEnum and the package
+        // reads ->value directly; the enums must stay string-backed.
+        $this->assertInstanceOf(\BackedEnum::class, Provider::Stripe);
+        $this->assertInstanceOf(\BackedEnum::class, EventType::PaymentSucceeded);
+        $this->assertInstanceOf(\BackedEnum::class, EntityType::Order);
     }
 
-    public function test_get_value_returns_the_backing_value(): void
+    public function test_backing_values_are_the_expected_strings(): void
     {
-        $this->assertSame('stripe', Provider::Stripe->getValue());
-        $this->assertSame('payment.succeeded', EventType::PaymentSucceeded->getValue());
-        $this->assertSame('order', EntityType::Order->getValue());
+        $this->assertSame('stripe', Provider::Stripe->value);
+        $this->assertSame('payment.succeeded', EventType::PaymentSucceeded->value);
+        $this->assertSame('order', EntityType::Order->value);
     }
 
     public function test_config_points_at_contract_implementations(): void
@@ -58,6 +64,6 @@ class ElasticAuditEnumsTest extends TestCase
     {
         // The PaymentRedactor is applied to providers whose ->value is listed
         // here; Stripe's callbacks carry card data, so it must be present.
-        $this->assertContains(Provider::Stripe->getValue(), config('http_logs.payment_provider_values'));
+        $this->assertContains(Provider::Stripe->value, config('http_logs.payment_provider_values'));
     }
 }

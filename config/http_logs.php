@@ -7,6 +7,19 @@ use App\Enums\ElasticAudit\Provider;
 return [
     'enabled' => env('HTTP_LOGS_ENABLED', false),
     'queue' => env('HTTP_LOGS_QUEUE', 'default'),
+
+    /*
+     * Queued indexing job retry/timeout settings. Defaults match the package's
+     * historic hard-coded behavior; tune only if your Elasticsearch cluster needs
+     * longer indexing timeouts or different retry pacing.
+     */
+    'job' => [
+        'tries' => env('HTTP_LOGS_JOB_TRIES', 3),
+        'backoff' => explode(',', (string) env('HTTP_LOGS_JOB_BACKOFF', '10,30,120')),
+        'timeout' => env('HTTP_LOGS_JOB_TIMEOUT', 30),
+        'batch_timeout' => env('HTTP_LOGS_BATCH_JOB_TIMEOUT', 60),
+    ],
+
     'sample_rate' => env('HTTP_LOGS_SAMPLE_RATE', 1.0),
     'body_preview_bytes' => env('HTTP_LOGS_BODY_PREVIEW_BYTES', 4096),
     'body_max_bytes' => env('HTTP_LOGS_BODY_MAX_BYTES', 32768),
@@ -67,7 +80,7 @@ return [
      * Set this in your app's config override with the ->value of your payment provider cases.
      * Example: ['tbc', 'bog', 'credo'...]
      */
-    'payment_provider_values' => ['stripe', 'tbc'],
+    'payment_provider_values' => ['stripe'],
 
     /*
      * Redaction overrides applied on top of the package's built-in rules, kept

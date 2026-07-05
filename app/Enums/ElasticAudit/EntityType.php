@@ -13,9 +13,4 @@ enum EntityType: string implements EntityTypeContract
     case Product = 'product';
     case Order = 'order';
     case Payment = 'payment';
-
-    public function getValue(): string
-    {
-        return $this->value;
-    }
 }

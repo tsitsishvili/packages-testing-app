@@ -16,9 +16,4 @@ enum EventType: string implements EventTypeContract
 
     // Outgoing requests we initiate.
     case CatalogSync = 'catalog.sync';
-
-    public function getValue(): string
-    {
-        return $this->value;
-    }
 }

@@ -23,16 +23,17 @@ return [
     | Access
     |--------------------------------------------------------------------------
     |
-    | Whether the docs routes are reachable. Leave null to open them everywhere
-    | except production; set true/false to force it. Combine with route
-    | middleware below to put the docs behind auth. To restrict *who* may view
-    | them, register a gate with Documentator::auth() from a service provider:
+    | Whether the docs routes are reachable. Disabled by default (a security
+    | hardening in documentator 1.6.3): set DOCUMENTATOR_ENABLED=true to expose
+    | the UI/OpenAPI routes. Combine with route middleware below to put the docs
+    | behind auth. To restrict *who* may view them, register a gate with
+    | Documentator::auth() from a service provider:
     |
     |     Documentator::auth(fn ($request) => $request->user()?->is_admin);
     |
     */
 
-    'enabled' => env('DOCUMENTATOR_ENABLED', null),
+    'enabled' => env('DOCUMENTATOR_ENABLED', false),
 
     /*
     |--------------------------------------------------------------------------
