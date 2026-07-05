@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "97a345bf127549fd39c5f69d2a2e9f39",
+    "content-hash": "8f4b925eac7c8f1411b794714d3522d3",
     "packages": [
         {
             "name": "brick/math",
@@ -7088,16 +7088,16 @@
         },
         {
             "name": "tsitsishvili/elastic-audit",
-            "version": "v2.5.0",
+            "version": "v3.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/tsitsishvili/elastic-audit.git",
-                "reference": "87816dd7307e49d408dfc79a4f1309341bf80696"
+                "reference": "34bebead68600a2f783020cfa6fd010556963efb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/tsitsishvili/elastic-audit/zipball/87816dd7307e49d408dfc79a4f1309341bf80696",
-                "reference": "87816dd7307e49d408dfc79a4f1309341bf80696",
+                "url": "https://api.github.com/repos/tsitsishvili/elastic-audit/zipball/34bebead68600a2f783020cfa6fd010556963efb",
+                "reference": "34bebead68600a2f783020cfa6fd010556963efb",
                 "shasum": ""
             },
             "require": {
@@ -7148,9 +7148,9 @@
             ],
             "support": {
                 "issues": "https://github.com/tsitsishvili/elastic-audit/issues",
-                "source": "https://github.com/tsitsishvili/elastic-audit/tree/v2.5.0"
+                "source": "https://github.com/tsitsishvili/elastic-audit/tree/v3.0.0"
             },
-            "time": "2026-07-01T07:32:09+00:00"
+            "time": "2026-07-05T19:19:29+00:00"
         },
         {
             "name": "vlucas/phpdotenv",
