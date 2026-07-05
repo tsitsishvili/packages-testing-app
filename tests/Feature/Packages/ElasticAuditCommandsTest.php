@@ -18,7 +18,11 @@ class ElasticAuditCommandsTest extends ElasticAuditTestCase
         $this->artisan('http-logs:create-index')->assertSuccessful();
 
         $this->assertCount(1, $this->es->createIndexCalls);
-        $this->assertStringContainsString('_http_logs_', $this->es->createIndexCalls[0]['index']);
+        // Physical index is the initial rollover generation of the read alias, e.g. app_http_logs-000001.
+        $this->assertSame(
+            config('http_logs.index_alias').'-000001',
+            $this->es->createIndexCalls[0]['index'],
+        );
 
         // Read + write aliases are attached to the new physical index.
         $aliases = array_column($this->es->putAliasCalls, 'alias');
@@ -34,7 +38,10 @@ class ElasticAuditCommandsTest extends ElasticAuditTestCase
         $this->artisan('activity-logs:create-index')->assertSuccessful();
 
         $this->assertCount(1, $this->es->createIndexCalls);
-        $this->assertStringContainsString('_activity_logs_', $this->es->createIndexCalls[0]['index']);
+        $this->assertSame(
+            config('activity_logs.index_alias').'-000001',
+            $this->es->createIndexCalls[0]['index'],
+        );
     }
 
     public function test_create_index_is_idempotent_when_the_index_already_exists(): void

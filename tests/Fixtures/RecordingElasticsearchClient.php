@@ -33,6 +33,9 @@ final class RecordingElasticsearchClient implements LogElasticsearchClientInterf
     /** @var list<array<string, mixed>> Every params array passed to search(). */
     public array $searchCalls = [];
 
+    /** @var list<array{alias: string, conditions: array<string, mixed>, newIndex: ?string}> */
+    public array $rolloverCalls = [];
+
     /** Whether existsIndex() reports the physical index as already present. */
     public bool $indexExists = false;
 
@@ -114,8 +117,10 @@ final class RecordingElasticsearchClient implements LogElasticsearchClientInterf
 
     public function putLifecyclePolicy(string $name, array $policy): void {}
 
-    public function rollover(string $alias, array $conditions): array
+    public function rollover(string $alias, array $conditions, ?string $newIndex = null): array
     {
+        $this->rolloverCalls[] = ['alias' => $alias, 'conditions' => $conditions, 'newIndex' => $newIndex];
+
         return [];
     }
 
