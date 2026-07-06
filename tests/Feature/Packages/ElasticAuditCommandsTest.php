@@ -44,15 +44,18 @@ class ElasticAuditCommandsTest extends ElasticAuditTestCase
         );
     }
 
-    public function test_create_index_is_idempotent_when_the_index_already_exists(): void
+    public function test_create_index_uses_the_next_available_rollover_index(): void
     {
-        $this->es->indexExists = true;
+        $this->es->existingIndexes = [config('http_logs.index_alias').'-000001'];
         $this->es->aliasExists = true;
 
         $this->artisan('http-logs:create-index')->assertSuccessful();
 
-        // Nothing new is created when the index and aliases are already present.
-        $this->assertEmpty($this->es->createIndexCalls);
+        $this->assertCount(1, $this->es->createIndexCalls);
+        $this->assertSame(
+            config('http_logs.index_alias').'-000002',
+            $this->es->createIndexCalls[0]['index'],
+        );
     }
 
     public function test_prune_does_nothing_without_retention_buckets(): void

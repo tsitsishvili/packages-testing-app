@@ -24,6 +24,9 @@ final class RecordingElasticsearchClient implements LogElasticsearchClientInterf
     /** @var list<array<string, mixed>> Every params array passed to createIndex(). */
     public array $createIndexCalls = [];
 
+    /** @var list<array{name: string, template: array<string, mixed>}> */
+    public array $putIndexTemplateCalls = [];
+
     /** @var list<array<string, mixed>> Every params array passed to deleteByQuery(). */
     public array $deleteByQueryCalls = [];
 
@@ -38,6 +41,9 @@ final class RecordingElasticsearchClient implements LogElasticsearchClientInterf
 
     /** Whether existsIndex() reports the physical index as already present. */
     public bool $indexExists = false;
+
+    /** @var list<string> Specific index names existsIndex() should report as present. */
+    public array $existingIndexes = [];
 
     /** Whether existsAlias() reports the alias as already present. */
     public bool $aliasExists = false;
@@ -93,8 +99,17 @@ final class RecordingElasticsearchClient implements LogElasticsearchClientInterf
         return [];
     }
 
+    public function putIndexTemplate(string $name, array $template): void
+    {
+        $this->putIndexTemplateCalls[] = ['name' => $name, 'template' => $template];
+    }
+
     public function existsIndex(string $index): bool
     {
+        if ($this->existingIndexes !== []) {
+            return in_array($index, $this->existingIndexes, true);
+        }
+
         return $this->indexExists;
     }
 
