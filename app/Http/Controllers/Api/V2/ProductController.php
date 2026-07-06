@@ -45,6 +45,7 @@ class ProductController extends Controller
     }
 
     #[Summary('Create a product')]
+    #[Description('Creates a product from the validated payload and returns it in the v2 shape with a `201` status.')]
     #[Authenticated]
     #[ApiResponse(status: 201, resource: ProductResource::class, description: 'Product created.')]
     public function store(StoreProductRequest $request): JsonResponse
@@ -57,6 +58,7 @@ class ProductController extends Controller
     }
 
     #[Summary('Show a product')]
+    #[Description('Returns a single product resolved by its ID, in the v2 shape.')]
     #[ApiResponse(status: 200, resource: ProductResource::class)]
     public function show(Product $product): ProductResource
     {
@@ -64,6 +66,7 @@ class ProductController extends Controller
     }
 
     #[Summary('Update a product')]
+    #[Description('Updates the product from the validated payload and returns the fresh resource in the v2 shape.')]
     #[Authenticated]
     #[ApiResponse(status: 200, resource: ProductResource::class, description: 'Product updated.')]
     public function update(UpdateProductRequest $request, Product $product): ProductResource
@@ -74,6 +77,7 @@ class ProductController extends Controller
     }
 
     #[Summary('Delete a product')]
+    #[Description('Permanently deletes the product and returns an empty `204` response.')]
     #[Authenticated]
     #[ApiResponse(status: 204, description: 'Product deleted.')]
     public function destroy(Product $product): Response

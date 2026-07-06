@@ -13,12 +13,16 @@
         "laravel/framework": "^12.0",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.10.1",
+        "lorisleiva/laravel-actions": "^2.10",
         "spatie/laravel-data": "^4.23",
-        "tsitsishvili/documentator": "^1.6",
+        "spatie/laravel-json-api-paginate": "^2.0",
+        "spatie/laravel-query-builder": "^7.3",
+        "tsitsishvili/documentator": "^1.7",
         "tsitsishvili/elastic-audit": "^3.0"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
+        "laravel/boost": "^2.4",
         "laravel/pail": "^1.2.2",
         "laravel/pint": "^1.24",
         "laravel/sail": "^1.41",

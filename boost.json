@@ -1,9 +1,23 @@
 {
     "agents": [
-        "gemini"
+        "claude_code",
+        "codex"
     ],
+    "cloud": false,
     "guidelines": true,
-    "herd_mcp": false,
     "mcp": true,
-    "sail": false
+    "nightwatch": false,
+    "packages": [
+        "tsitsishvili/documentator",
+        "lorisleiva/laravel-actions",
+        "spatie/laravel-query-builder"
+    ],
+    "sail": false,
+    "skills": [
+        "laravel-best-practices",
+        "tailwindcss-development",
+        "laravel-actions",
+        "laravel-query-builder",
+        "documentator-api-docs"
+    ]
 }

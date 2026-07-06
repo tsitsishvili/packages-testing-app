@@ -75,6 +75,7 @@ class OrderController extends Controller
     }
 
     #[Summary('Show an order')]
+    #[Description('Returns a single order with its line items and their products. The response shape is inferred from `OrderData`.')]
     public function show(Order $order): OrderData
     {
         return OrderData::fromModel($order->load('items.product'));

@@ -1,5 +1,6 @@
 <?php
 
+use App\Actions\PublishProduct;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\NewsletterController;
 use App\Http\Controllers\Api\OrderController;
@@ -23,6 +24,7 @@ Route::post('newsletter/subscribe', [NewsletterController::class, 'subscribe']);
 
 // Public reads.
 Route::get('products', [ProductController::class, 'index']);
+Route::get('products/search', [ProductController::class, 'search']);
 Route::get('products/{product}', [ProductController::class, 'show']);
 Route::get('products/{product}/statistics', [ProductController::class, 'statistics']);
 
@@ -32,6 +34,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('products/{product}', [ProductController::class, 'update']);
     Route::delete('products/{product}', [ProductController::class, 'destroy']);
     Route::post('products/{product}/sync', [ProductController::class, 'sync']);
+
+    // Single-action controller (lorisleiva/laravel-actions): body from rules(),
+    // response from the handle() return type.
+    Route::post('products/{product}/publish', [PublishProduct::class, 'asController']);
 
     // Orders — spatie/laravel-data DTOs through the service/repository pipeline.
     Route::post('orders/import', [OrderImportController::class, 'store']);
