@@ -29,10 +29,18 @@ class DocumentatorDocsUiTest extends TestCase
 
     public function test_the_docs_ui_is_served(): void
     {
-        $this->get('/docs')
-            ->assertOk()
-            ->assertHeaderMissing('X-Powered-By-Nothing')
-            ->assertSee('html', false);
+        // grouping.sections is configured (config/documentator.php), so the bare
+        // /docs landing redirects to the first section — "API v2", whose pattern
+        // must be listed before the api/* catch-all so it wins during matching.
+        // The section page itself serves the UI.
+        $this->get('/docs')->assertRedirect('/docs/api-v2');
+
+        foreach (['api-v2', 'api'] as $section) {
+            $this->get("/docs/{$section}")
+                ->assertOk()
+                ->assertHeaderMissing('X-Powered-By-Nothing')
+                ->assertSee('html', false);
+        }
     }
 
     public function test_it_serves_the_raw_openapi_json(): void

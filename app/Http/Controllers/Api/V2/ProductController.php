@@ -21,6 +21,7 @@ use Tsitsishvili\Documentator\Attributes\Group;
 use Tsitsishvili\Documentator\Attributes\QueryParam;
 use Tsitsishvili\Documentator\Attributes\Response as ApiResponse;
 use Tsitsishvili\Documentator\Attributes\Summary;
+use Tsitsishvili\Documentator\Attributes\TagDescription;
 use Tsitsishvili\ElasticAudit\DataTransferObjects\HttpLogContext;
 use Tsitsishvili\ElasticAudit\Facades\HttpLog;
 
@@ -28,7 +29,8 @@ use Tsitsishvili\ElasticAudit\Facades\HttpLog;
  * v2 of the Products API. Validation is shared with v1 (same FormRequests);
  * the difference is the more structured response shape (see the v2 Resources).
  */
-#[Group('Products', version: 'v2')]
+#[Group('Products (v2)', version: 'v2')]
+#[TagDescription('v2 of the catalog API — same validation as v1 with richer, more structured response shapes. A distinct tag name (from v1\'s "Products") keeps the two versions from colliding when the exported spec is consumed by generic OpenAPI tooling.')]
 class ProductController extends Controller
 {
     #[Summary('List products')]

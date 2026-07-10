@@ -89,6 +89,12 @@ jobs:
           php artisan key:generate
           mkdir -p build/api-docs
 
+      # Audit docs quality and validate the OpenAPI shape. Without --strict the
+      # 204-No-Content quality notes stay non-fatal, so this fails the build only
+      # when the generated spec is structurally invalid OpenAPI.
+      - name: Audit API docs
+        run: php artisan documentator:check
+
       # The commands only scan routes/FormRequests/Resources, so no DB is needed.
       - name: Generate cached OpenAPI spec
         run: php artisan documentator:generate

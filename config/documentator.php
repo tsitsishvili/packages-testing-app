@@ -15,8 +15,8 @@ return [
     */
 
     'title' => env('DOCUMENTATOR_TITLE', config('app.name').' API'),
-    'version' => env('DOCUMENTATOR_VERSION', '1.0.0'),
-    'description' => env('DOCUMENTATOR_DESCRIPTION', null),
+    'version' => env('DOCUMENTATOR_VERSION', '1.2.0'),
+    'description' => env('DOCUMENTATOR_DESCRIPTION', 'A description of your API.'),
 
     /*
     |--------------------------------------------------------------------------
@@ -47,6 +47,7 @@ return [
 
     'servers' => [
         ['url' => env('APP_URL', 'http://localhost'), 'description' => 'Default'],
+        ['url' => env('APP_URL', 'https://tester-app.com'), 'description' => 'Production'],
     ],
 
     /*
@@ -100,6 +101,33 @@ return [
             'horizon*',
             '_debugbar*',
             'sanctum/*',
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Grouping & sections
+    |--------------------------------------------------------------------------
+    |
+    | `source` controls how endpoints without an explicit #[Group] are tagged
+    | ("auto" = by controller / URI). `sections` split the built-in UI by route
+    | surface, each served at /docs/{slug} and /docs/{slug}/openapi.json. Keys
+    | are URI patterns (Str::is wildcards) matched top-to-bottom, first match
+    | wins — so the more specific `api/v2/*` MUST precede the `api/*` catch-all.
+    |
+    | Because this file overrides the package's whole `grouping` key (config is
+    | merged shallowly), the non-section keys below mirror the package defaults.
+    |
+    */
+
+    'grouping' => [
+        'source' => env('DOCUMENTATOR_GROUPING', 'auto'), // auto, controller, path
+        'path_depth' => 1,
+        'ignore_path_prefixes' => ['api'],
+        'ignore_path_parameters' => true,
+        'sections' => [
+            'api/v2/*' => 'API v2', // the v2 product surface -> /docs/api-v2
+            'api/*' => 'API',       // everything else (v1 products, auth, orders, …) -> /docs/api
         ],
     ],
 

@@ -42,7 +42,7 @@ Prefer these idioms — each row is something documentator extracts with **no
 annotation**. This is the primary way to get good docs.
 
 | To document…                     | Write this in the app                                                                                   |
-| -------------------------------- | ------------------------------------------------------------------------------------------------------- |
+|----------------------------------|---------------------------------------------------------------------------------------------------------|
 | Summary + description            | A docblock on the controller method — **first line = summary**, the rest = description.                 |
 | Path params (typed)              | Route-model binding or a numeric constraint → the param is typed `integer` automatically.               |
 | Request body                     | Type-hint a `FormRequest`; its `rules()` become body params (types, required, enums, formats, nesting). |
@@ -50,7 +50,7 @@ annotation**. This is the primary way to get good docs.
 | Body without a FormRequest       | Inline `$request->validate([...])`, `request()->validate([...])`, or `Validator::make(..., [...])`.     |
 | Individual query params          | Request accessors: `$request->integer('page')`, `$request->boolean('active')`, `$request->query('q')`.  |
 | Success response                 | Give the method a **return type**: an API `Resource`, `ResourceCollection`, model, or `Data` object.    |
-| Paginated response + page params | `return ResourceClass::collection($query->paginate())` — envelope + `page`/`per_page` are inferred.      |
+| Paginated response + page params | `return ResourceClass::collection($query->paginate())` — envelope + `page`/`per_page` are inferred.     |
 | Literal JSON response            | `return response()->json([...], 202)` — shape and status are read from the literal.                     |
 | Filters / sorts / includes       | `spatie/laravel-query-builder`: literal `allowedFilters()`, `allowedSorts()`, `allowedIncludes()`.      |
 
@@ -98,24 +98,24 @@ use Tsitsishvili\Documentator\Attributes\{
 };
 ```
 
-| Attribute (constructor)                                                        | Use it to…                                                       |
-| ------------------------------------------------------------------------------ | ---------------------------------------------------------------- |
-| `#[Summary('...')]` / `#[Description('...')]`                                   | Set text when there is no docblock, or override it.              |
-| `#[Group('Orders', version: null)]`                                            | Force the tag/section an endpoint belongs to.                    |
-| `#[TagDescription('...')]`                                                     | Add a description to the OpenAPI tag for this group.             |
-| `#[OperationId('createOrder')]`                                                | Set a stable `operationId`.                                      |
-| `#[Authenticated(scheme: 'default')]`                                          | Mark an endpoint as requiring a security scheme.                 |
-| `#[Server('https://tenant.example.com', description: '...')]`                  | Add an endpoint-specific server.                                 |
-| `#[PathParam('id', type: 'integer', description: '...', example: 1)]`          | Describe/type a path param inference missed.                     |
-| `#[QueryParam('q', required: false, description: '...')]`                      | Add a query param not visible in code.                           |
-| `#[BodyParam('note', type: 'string', required: false)]`                        | Add/adjust a body field.                                         |
-| `#[HeaderParam(...)]` / `#[CookieParam(...)]`                                  | Document request headers / cookies.                              |
-| `#[RequestMediaType('multipart/form-data')]`                                   | Force the request content type.                                  |
+| Attribute (constructor)                                                        | Use it to…                                                                           |
+|--------------------------------------------------------------------------------|--------------------------------------------------------------------------------------|
+| `#[Summary('...')]` / `#[Description('...')]`                                  | Set text when there is no docblock, or override it.                                  |
+| `#[Group('Orders', version: null)]`                                            | Force the tag/section an endpoint belongs to.                                        |
+| `#[TagDescription('...')]`                                                     | Add a description to the OpenAPI tag for this group.                                 |
+| `#[OperationId('createOrder')]`                                                | Set a stable `operationId`.                                                          |
+| `#[Authenticated(scheme: 'default')]`                                          | Mark an endpoint as requiring a security scheme.                                     |
+| `#[Server('https://tenant.example.com', description: '...')]`                  | Add an endpoint-specific server.                                                     |
+| `#[PathParam('id', type: 'integer', description: '...', example: 1)]`          | Describe/type a path param inference missed.                                         |
+| `#[QueryParam('q', required: false, description: '...')]`                      | Add a query param not visible in code.                                               |
+| `#[BodyParam('note', type: 'string', required: false)]`                        | Add/adjust a body field.                                                             |
+| `#[HeaderParam(...)]` / `#[CookieParam(...)]`                                  | Document request headers / cookies.                                                  |
+| `#[RequestMediaType('multipart/form-data')]`                                   | Force the request content type.                                                      |
 | `#[Response(status: 201, resource: OrderResource::class, description: '...')]` | Declare a response inference can't derive; `collection`/`paginated` flags available. |
-| `#[ResponseHeader('X-RateLimit-Remaining', ...)]`                              | Document a response header.                                      |
-| `#[SchemaName('Order')]` / `#[UsesModel(Order::class)]`                        | Name a reusable component schema / point a Resource at its model. |
-| `#[Hidden]`                                                                    | Exclude the route from the docs entirely.                        |
-| `#[Deprecated]`                                                                | Mark the operation deprecated.                                   |
+| `#[ResponseHeader('X-RateLimit-Remaining', ...)]`                              | Document a response header.                                                          |
+| `#[SchemaName('Order')]` / `#[UsesModel(Order::class)]`                        | Name a reusable component schema / point a Resource at its model.                    |
+| `#[Hidden]`                                                                    | Exclude the route from the docs entirely.                                            |
+| `#[Deprecated]`                                                                | Mark the operation deprecated.                                                       |
 
 `Response`, `Server`, `BodyParam`/`QueryParam`/etc. and `ResponseHeader` are
 repeatable — stack them. Attributes go on the controller **method** (a few also
