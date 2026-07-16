@@ -24,7 +24,7 @@
         "spatie/laravel-data": "^4.23",
         "spatie/laravel-json-api-paginate": "^2.0",
         "spatie/laravel-query-builder": "^7.3",
-        "tsitsishvili/documentator": "^1.x-dev",
+        "tsitsishvili/documentator": "^2.x-dev",
         "tsitsishvili/elastic-audit": "^3.x-dev"
     },
     "require-dev": {
