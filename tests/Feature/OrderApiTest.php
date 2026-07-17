@@ -84,6 +84,25 @@ class OrderApiTest extends TestCase
             ->assertJsonPath('data.0.status', 'paid');
     }
 
+    public function test_it_queries_orders_with_structured_body_criteria(): void
+    {
+        $user = User::factory()->create();
+        Order::factory()->for($user)->create(['status' => OrderStatus::Paid]);
+        Order::factory()->for($user)->create(['status' => OrderStatus::Cancelled]);
+        Order::factory()->create(['status' => OrderStatus::Paid]);
+
+        $this->actingAs($user)->json('QUERY', '/api/orders', ['status' => 'paid'])
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.status', 'paid');
+    }
+
+    public function test_guests_cannot_query_orders(): void
+    {
+        $this->json('QUERY', '/api/orders', ['status' => 'paid'])
+            ->assertUnauthorized();
+    }
+
     public function test_it_shows_an_order_with_its_lines(): void
     {
         $user = User::factory()->create();

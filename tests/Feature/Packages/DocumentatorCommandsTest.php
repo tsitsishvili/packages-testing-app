@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Packages;
 
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\File;
 use Tests\TestCase;
 
@@ -46,7 +45,7 @@ class DocumentatorCommandsTest extends TestCase
             ->assertSuccessful();
 
         $spec = $this->decode($path);
-        $this->assertStringStartsWith('3.', $spec['openapi']);
+        $this->assertSame('3.2.0', $spec['openapi']);
         $this->assertNotEmpty($spec['paths']);
     }
 
@@ -58,28 +57,29 @@ class DocumentatorCommandsTest extends TestCase
             ->assertSuccessful();
 
         $spec = $this->decode($path);
-        $this->assertArrayHasKey('openapi', $spec);
+        $this->assertSame('3.2.0', $spec['openapi']);
         $this->assertArrayHasKey('/api/orders', $spec['paths']);
+        $this->assertArrayHasKey('query', $spec['paths']['/api/orders']);
     }
 
     public function test_postman_writes_a_collection(): void
     {
         $path = $this->dir.'/collection.json';
 
-        try {
-            Artisan::call('documentator:postman', ['path' => $path]);
-        } catch (\TypeError $e) {
-            // Known bug: PostmanGenerator::generate() reads components.securitySchemes
-            // (a stdClass in the spec) and passes it to request(array $securitySchemes),
-            // so `documentator:postman` throws whenever the API declares any security
-            // scheme — which this app does (config('documentator.security')). Skip until
-            // the package is fixed rather than let it mask other regressions.
-            $this->markTestSkipped('documentator:postman fails with configured securitySchemes: '.$e->getMessage());
-        }
+        $this->artisan('documentator:postman', ['path' => $path])
+            ->assertSuccessful();
 
         $collection = $this->decode($path);
+        $orders = collect($collection['item'])->firstWhere('name', 'Orders');
+        $queryRequest = collect($orders['item'])->first(
+            fn (array $item): bool => data_get($item, 'request.method') === 'QUERY'
+        );
+
         $this->assertArrayHasKey('info', $collection);
         $this->assertArrayHasKey('item', $collection);
         $this->assertNotEmpty($collection['item']);
+        $this->assertNotNull($queryRequest);
+        $this->assertSame('raw', data_get($queryRequest, 'request.body.mode'));
+        $this->assertSame('bearer', data_get($queryRequest, 'request.auth.type'));
     }
 }

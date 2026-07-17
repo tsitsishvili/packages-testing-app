@@ -42,6 +42,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Orders — spatie/laravel-data DTOs through the service/repository pipeline.
     Route::post('orders/import', [OrderImportController::class, 'store']);
     Route::get('orders', [OrderController::class, 'index']);
+    Route::match(['QUERY'], 'orders', [OrderController::class, 'query']);
     Route::post('orders', [OrderController::class, 'store']);
     Route::get('orders/{order}', [OrderController::class, 'show']);
     Route::put('orders/{order}', [OrderController::class, 'update']);

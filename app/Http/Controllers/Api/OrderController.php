@@ -53,6 +53,16 @@ class OrderController extends Controller
         );
     }
 
+    #[Summary('Query orders')]
+    #[Description('Searches orders with structured criteria sent in an HTTP `QUERY` request body. Documentator emits this as an OpenAPI 3.2 `query` operation instead of flattening the criteria into URI parameters.')]
+    #[ApiResponse(status: 200, resource: OrderResource::class, paginated: true)]
+    public function query(SearchOrdersData $criteria): AnonymousResourceCollection
+    {
+        return OrderResource::collection(
+            $this->orders->paginateForUser(request()->user(), $criteria)
+        );
+    }
+
     /**
      * Place an order.
      *

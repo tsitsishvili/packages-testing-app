@@ -48,8 +48,9 @@ class DocumentatorDocsUiTest extends TestCase
         $response = $this->getJson('/docs/openapi.json')->assertOk();
 
         $spec = $response->json();
-        $this->assertStringStartsWith('3.', $spec['openapi']);
+        $this->assertSame('3.2.0', $spec['openapi']);
         $this->assertArrayHasKey('/api/orders', $spec['paths']);
+        $this->assertArrayHasKey('query', $spec['paths']['/api/orders']);
     }
 
     public function test_docs_are_hidden_when_disabled(): void
