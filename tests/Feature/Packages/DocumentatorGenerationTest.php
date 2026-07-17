@@ -28,7 +28,7 @@ class DocumentatorGenerationTest extends TestCase
         $spec = $this->openApi();
 
         $this->assertArrayHasKey('openapi', $spec);
-        $this->assertStringStartsWith('3.', $spec['openapi']);
+        $this->assertSame('3.2.0', $spec['openapi']);
         $this->assertSame(config('documentator.title'), $spec['info']['title']);
         $this->assertSame(config('documentator.version'), $spec['info']['version']);
         $this->assertIsArray($spec['paths']);
@@ -64,6 +64,24 @@ class DocumentatorGenerationTest extends TestCase
         // The index/store handlers map onto GET and POST operations.
         $this->assertArrayHasKey('get', $orders);
         $this->assertArrayHasKey('post', $orders);
+    }
+
+    public function test_it_documents_http_query_with_a_request_body(): void
+    {
+        $operation = $this->openApi()['paths']['/api/orders']['query'];
+        $queryParameters = array_column($operation['parameters'] ?? [], 'name');
+        $bodyProperties = $operation['requestBody']['content']['application/json']['schema']['properties'];
+
+        $this->assertArrayHasKey('requestBody', $operation);
+        $this->assertArrayHasKey('application/json', $operation['requestBody']['content']);
+        $this->assertArrayHasKey('status', $bodyProperties);
+        $this->assertArrayHasKey('currency', $bodyProperties);
+        $this->assertArrayHasKey('min_total', $bodyProperties);
+        $this->assertArrayHasKey('page', $bodyProperties);
+        $this->assertArrayHasKey('per_page', $bodyProperties);
+        $this->assertNotContains('status', $queryParameters);
+        $this->assertNotContains('currency', $queryParameters);
+        $this->assertNotContains('min_total', $queryParameters);
     }
 
     public function test_it_declares_the_configured_security_schemes(): void

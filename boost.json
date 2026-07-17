@@ -3,14 +3,15 @@
         "claude_code",
         "codex"
     ],
-    "cloud": false,
+    "cloud": true,
     "guidelines": true,
     "mcp": true,
     "nightwatch": false,
     "packages": [
         "tsitsishvili/documentator",
         "lorisleiva/laravel-actions",
-        "spatie/laravel-query-builder"
+        "spatie/laravel-query-builder",
+        "tsitsishvili/elastic-audit"
     ],
     "sail": false,
     "skills": [
@@ -18,6 +19,8 @@
         "tailwindcss-development",
         "laravel-actions",
         "laravel-query-builder",
-        "documentator-api-docs"
+        "documentator-api-docs",
+        "elastic-audit-development",
+        "deploying-laravel-cloud"
     ]
 }

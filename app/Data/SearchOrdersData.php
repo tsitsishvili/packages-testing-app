@@ -7,9 +7,8 @@ use App\Enums\OrderStatus;
 use Spatie\LaravelData\Data;
 
 /**
- * Filters for the order listing. Because the listing route is a GET, documentator
- * turns each of these properties into a documented query parameter rather than a
- * body field.
+ * Filters for the order listing. Documentator emits these properties as URI query
+ * parameters for GET and as request-body fields for HTTP QUERY.
  */
 class SearchOrdersData extends Data
 {

@@ -10,7 +10,7 @@ The Laravel Boost guidelines are specifically curated by Laravel maintainers for
 This application is a Laravel application and its main Laravel ecosystems package & versions are below. You are an expert with them all. Ensure you abide by these specific packages & versions.
 
 - php - 8.3
-- laravel/framework (LARAVEL) - v12
+- laravel/framework (LARAVEL) - v13
 - laravel/prompts (PROMPTS) - v0
 - laravel/sanctum (SANCTUM) - v4
 - laravel/boost (BOOST) - v2
@@ -18,7 +18,7 @@ This application is a Laravel application and its main Laravel ecosystems packag
 - laravel/pail (PAIL) - v1
 - laravel/pint (PINT) - v1
 - laravel/sail (SAIL) - v1
-- phpunit/phpunit (PHPUNIT) - v11
+- phpunit/phpunit (PHPUNIT) - v12
 - tailwindcss (TAILWINDCSS) - v4
 
 ## Skills Activation
@@ -97,7 +97,7 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 - Always use curly braces for control structures, even for single-line bodies.
 - Use PHP 8 constructor property promotion: `public function __construct(public GitHub $github) { }`. Do not leave empty zero-parameter `__construct()` methods unless the constructor is private.
 - Use explicit return type declarations and type hints for all method parameters: `function isAccessible(User $user, ?string $path = null): bool`
-- Use TitleCase for Enum keys: `FavoritePerson`, `BestLake`, `Monthly`.
+- Follow existing application Enum naming conventions.
 - Prefer PHPDoc blocks over inline comments. Only add inline comments for exceptionally complex logic.
 - Use array shape type definitions in PHPDoc blocks.
 
@@ -144,31 +144,6 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 
 - If you receive an "Illuminate\Foundation\ViteException: Unable to locate file in Vite manifest" error, you can run `npm run build` or ask the user to run `npm run dev` or `composer run dev`.
 
-=== laravel/v12 rules ===
-
-# Laravel 12
-
-- CRITICAL: ALWAYS use `search-docs` tool for version-specific Laravel documentation and updated code examples.
-- Since Laravel 11, Laravel has a new streamlined file structure which this project uses.
-
-## Laravel 12 Structure
-
-- In Laravel 12, middleware are no longer registered in `app/Http/Kernel.php`.
-- Middleware are configured declaratively in `bootstrap/app.php` using `Application::configure()->withMiddleware()`.
-- `bootstrap/app.php` is the file to register middleware, exceptions, and routing files.
-- `bootstrap/providers.php` contains application specific service providers.
-- The `app/Console/Kernel.php` file no longer exists; use `bootstrap/app.php` or `routes/console.php` for console configuration.
-- Console commands in `app/Console/Commands/` are automatically available and do not require manual registration.
-
-## Database
-
-- When modifying a column, the migration must include all of the attributes that were previously defined on the column. Otherwise, they will be dropped and lost.
-- Laravel 12 allows limiting eagerly loaded records natively, without external packages: `$query->latest()->limit(10);`.
-
-### Models
-
-- Casts can and likely should be set in a `casts()` method on a model rather than the `$casts` property. Follow existing conventions from other models.
-
 === pint/core rules ===
 
 # Laravel Pint Code Formatter
@@ -196,58 +171,63 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 
 === tsitsishvili/documentator rules ===
 
-## Documentator (tsitsishvili/documentator)
+## Documentator
 
-Auto-inferred, interactive **OpenAPI 3.1** API documentation for Laravel. It reads
-your existing code — routes, FormRequests, inline validation, API Resources and
-return types — and generates the docs; PHP attributes refine anything.
+This application uses `tsitsishvili/documentator` to infer **OpenAPI 3.2** from
+Laravel code. Keep documentation code-first: prefer typed routes, FormRequests,
+validation, Resources/Data objects, and return types; use attributes only for
+facts inference cannot see.
 
-**Golden rule: inference first, attributes last.** Write idiomatic, typed Laravel
-and most docs appear on their own. Add an attribute only to fix or add what
-inference can't see — attributes always win.
+When changing an API endpoint:
 
-To make an endpoint document well (no annotations needed):
+- Inspect `config/documentator.php`, the route/middleware, action, request type,
+  response type/expression, and tests.
+- Put the first summary paragraph and following description in the method docblock.
+- On `GET`/`HEAD`, validation becomes URI query parameters, not a request body.
+- For HTTP `QUERY`, use `Route::match(['QUERY'], ...)`; validation remains request
+  content and becomes the OpenAPI 3.2 `query.requestBody`.
+- Do not confuse HTTP `QUERY` request content with URI query parameters.
+- Add `Tsitsishvili\Documentator\Attributes` only for gaps or intentional overrides.
+- Verify with `php artisan documentator:explain METHOD /uri` and
+  `php artisan documentator:check`.
 
-- Use a `[Controller::class, 'method']` route, **not a closure** — closure routes
-  skip reflection-based inference.
-- Add a docblock: **first line = summary**, the rest = description.
-- Type-hint a `FormRequest` (its `rules()` become body params; on **GET/HEAD** they
-  become **query** params) — or inline `$request->validate([...])`.
-- Give the method a **return type**: an API `Resource`, `ResourceCollection`,
-  Eloquent model, or `spatie/laravel-data` object → response schema is inferred.
-- Status follows the verb (`POST → 201`, `DELETE → 204`); 401/403/404/422 are added
-  from the endpoint's shape.
+Use the **`documentator-api-docs`** skill for the full workflow, inference map,
+attribute guidance, troubleshooting, contract checks, and examples.
 
-Override only the gaps with attributes from `Tsitsishvili\Documentator\Attributes`:
+=== tsitsishvili/elastic-audit rules ===
 
-<code-snippet name="Refine inferred docs with attributes" lang="php">
-use Tsitsishvili\Documentator\Attributes\{Summary, Group, QueryParam, Response, Authenticated, Hidden};
+## Elastic Audit
 
-#[Group('Orders')]
-#[Authenticated]
-#[QueryParam('include', description: 'Comma-separated relations to embed.')]
-#[Response(status: 201, resource: OrderResource::class, description: 'The created order.')]
-public function store(StoreOrderRequest $request): OrderResource { /* ... */ }
-</code-snippet>
+Elastic Audit records third-party HTTP traffic and actor/model activity in a dedicated Elasticsearch cluster. HTTP
+logs and activity logs are independent subsystems with separate configuration, queues, indexes, and dashboards.
 
-Attributes include `#[Summary]`, `#[Description]`, `#[Group]`,
-`#[TagDescription]`, `#[OperationId]`, `#[PathParam]`, `#[QueryParam]`,
-`#[HeaderParam]`, `#[CookieParam]`, `#[BodyParam]`, `#[RequestMediaType]`,
-`#[Response]`, `#[ResponseHeader]`, `#[Authenticated]`, `#[Server]`,
-`#[Hidden]`, `#[Deprecated]`, `#[SchemaName]`, `#[UsesModel]`.
+- Inspect `config/http_logs.php`, `config/activity_logs.php`, and `config/log_elasticsearch.php` before changing an
+  integration. Never edit the package files under `vendor/`.
+- Use `HttpLog::make(...)` instead of Laravel's `Http` facade when an outgoing provider request must be audited. It
+  returns an `Illuminate\Http\Client\PendingRequest`, so the normal Laravel HTTP client API remains available.
+- Pass existing backed enum cases implementing `ProviderContract`, `EventTypeContract`, and `EntityTypeContract` to
+  HTTP logging APIs. Inspect the consuming application's registered enum classes and never invent enum cases.
+- For incoming callbacks, use `IncomingHttpLogMiddleware` and set `third_party_*` request attributes from trusted
+  application code. Never derive provider, event, or entity types from user-controlled request input.
+- Use `ActivityLog::record(...)` for explicit domain events and `ActivityLoggable` for automatic Eloquent lifecycle
+  events. Activity entity and actor types are free string labels.
+- Logging dispatches queued jobs. Keep the configured queue worker running and use `Bus::fake()` when asserting job
+  dispatch in tests; unit tests should not require a live Elasticsearch cluster.
+- Review redaction before capturing new headers, fields, or metadata. Treat every `redaction.allow` entry as a security
+  exception because allowed values are stored in clear text.
+- After infrastructure or configuration changes, run `php artisan elastic-audit:health --all`. Install the lifecycle
+  policy before creating HTTP or activity indexes on a fresh environment.
 
-Operational notes:
-
-- Docs are **disabled by default** — set `DOCUMENTATOR_ENABLED=true`. UI at `/docs`,
-  spec at `/docs/openapi.json`. Only routes matching `documentator.routes.match`
-  (default `api/*`) are documented.
-- Verify with `php artisan documentator:check` (audits quality, validates the
-  OpenAPI shape) — run it in CI. Use
-  `php artisan documentator:check --against=openapi.json` to catch committed-spec
-  drift. Also: `documentator:generate` (cache), `documentator:export`,
-  `documentator:postman`.
-
-For the full how-to (rich validation-rule mapping, pagination, sections, the
-complete attribute reference), use the **`documentator-api-docs`** skill.
+<!-- Outgoing audited request -->
+```php
+$response = HttpLog::make(
+    provider: Provider::Delivery,
+    eventType: EventType::DeliveryOrderCreate,
+    context: HttpLogContext::forEntity(
+        entityType: EntityType::Order,
+        entityId: (string) $order->getKey(),
+    ),
+)->post($url, $payload);
+```
 
 </laravel-boost-guidelines>
