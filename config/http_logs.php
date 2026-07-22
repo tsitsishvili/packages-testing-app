@@ -20,9 +20,35 @@ return [
         'batch_timeout' => env('HTTP_LOGS_BATCH_JOB_TIMEOUT', 60),
     ],
 
+    /*
+     * Default per-document retention, used when a log context does not set one
+     * explicitly. 'retain_forever' takes precedence and makes new documents
+     * permanent (null retention_days); the prune command then ignores them,
+     * while ILM deletion still applies per index.
+     */
+    'retention_days' => env('HTTP_LOGS_RETENTION_DAYS', 360),
+    'retain_forever' => env('HTTP_LOGS_RETAIN_FOREVER', false),
+
     'sample_rate' => env('HTTP_LOGS_SAMPLE_RATE', 1.0),
     'body_preview_bytes' => env('HTTP_LOGS_BODY_PREVIEW_BYTES', 4096),
     'body_max_bytes' => env('HTTP_LOGS_BODY_MAX_BYTES', 32768),
+
+    /*
+     * Bodies larger than this many bytes are captured headers-only — no body,
+     * preview, or hash — so a huge provider payload is never decoded, redacted,
+     * or hashed in memory on the request path.
+     */
+    'body_capture_max_bytes' => env('HTTP_LOGS_BODY_CAPTURE_MAX_BYTES', 1048576),
+
+    /*
+     * How to store bodies that cannot be key-redacted because they do not decode
+     * to a key/value structure (XML/SOAP, plain text, scalar JSON):
+     *
+     * metadata = store headers plus a sha256 hash of the raw body (default);
+     * preview  = store the raw body untouched (every value kept in clear text —
+     *            opt in only for providers whose non-JSON payloads are safe).
+     */
+    'undecodable_body_mode' => env('HTTP_LOGS_UNDECODABLE_BODY_MODE', 'metadata'),
 
     /*
        * preview = store sanitized body;

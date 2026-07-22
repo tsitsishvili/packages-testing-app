@@ -44,23 +44,32 @@ class ElasticAuditCommandsTest extends ElasticAuditTestCase
         );
     }
 
-    public function test_create_index_uses_the_next_available_rollover_index(): void
+    public function test_create_index_rolls_over_when_the_write_alias_already_exists(): void
     {
         $this->es->existingIndexes = [config('http_logs.index_alias').'-000001'];
         $this->es->aliasExists = true;
 
         $this->artisan('http-logs:create-index')->assertSuccessful();
 
-        $this->assertCount(1, $this->es->createIndexCalls);
+        // With an existing write alias the command rolls the alias over to the next
+        // physical index instead of creating a fresh index and moving the alias.
+        $this->assertEmpty($this->es->createIndexCalls);
+        $this->assertCount(1, $this->es->rolloverCalls);
+        $this->assertSame(config('http_logs.index_alias_write'), $this->es->rolloverCalls[0]['alias']);
         $this->assertSame(
             config('http_logs.index_alias').'-000002',
-            $this->es->createIndexCalls[0]['index'],
+            $this->es->rolloverCalls[0]['newIndex'],
         );
     }
 
     public function test_prune_does_nothing_without_retention_buckets(): void
     {
-        // Default search response carries no aggregations.
+        // An empty index still returns the composite aggregation, just with no
+        // buckets and no after_key to page past.
+        $this->es->searchResolver = fn (): array => [
+            'aggregations' => ['retention_buckets' => ['buckets' => []]],
+        ];
+
         $this->artisan('http-logs:prune')
             ->expectsOutputToContain('Nothing to prune')
             ->assertSuccessful();
@@ -70,12 +79,14 @@ class ElasticAuditCommandsTest extends ElasticAuditTestCase
 
     public function test_prune_deletes_documents_per_retention_bucket(): void
     {
+        // Retention values now come from a composite aggregation, so each bucket
+        // key is nested under the source name rather than being a bare scalar.
         $this->es->searchResolver = fn (): array => [
             'aggregations' => [
                 'retention_buckets' => [
                     'buckets' => [
-                        ['key' => 30, 'doc_count' => 5],
-                        ['key' => 360, 'doc_count' => 2],
+                        ['key' => ['retention_days' => 30], 'doc_count' => 5],
+                        ['key' => ['retention_days' => 360], 'doc_count' => 2],
                     ],
                 ],
             ],

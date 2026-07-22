@@ -59,6 +59,9 @@ final class RecordingElasticsearchClient implements LogElasticsearchClientInterf
     /** Response returned from deleteByQuery(). */
     public array $deleteByQueryResponse = ['deleted' => 0];
 
+    /** Response returned from rollover(). Defaults to a successful roll-over. */
+    public array $rolloverResponse = ['rolled_over' => true];
+
     public function ping(): bool
     {
         return true;
@@ -136,7 +139,7 @@ final class RecordingElasticsearchClient implements LogElasticsearchClientInterf
     {
         $this->rolloverCalls[] = ['alias' => $alias, 'conditions' => $conditions, 'newIndex' => $newIndex];
 
-        return [];
+        return $this->rolloverResponse;
     }
 
     /** The document body from the most recent index() call. */

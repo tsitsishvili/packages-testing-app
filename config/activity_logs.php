@@ -16,7 +16,14 @@ return [
         'batch_timeout' => env('ACTIVITY_LOGS_BATCH_JOB_TIMEOUT', 60),
     ],
 
-    'retention_days' => 360,
+    /*
+     * Default per-document retention. 'retain_forever' takes precedence and makes
+     * new documents permanent; individual contexts can still pass retentionDays to
+     * opt back into a finite lifetime. Disabling the ILM delete phase is required to
+     * retain whole indexes (see log_elasticsearch.lifecycle.delete_enabled).
+     */
+    'retention_days' => env('ACTIVITY_LOGS_RETENTION_DAYS', 360),
+    'retain_forever' => env('ACTIVITY_LOGS_RETAIN_FOREVER', false),
 
     'index_alias' => strtolower(env('LOG_ELASTICSEARCH_INDEX_PREFIX', env('APP_NAME'))).'_activity_logs',
     'index_alias_write' => strtolower(env('LOG_ELASTICSEARCH_INDEX_PREFIX', env('APP_NAME'))).'_activity_logs_write',
