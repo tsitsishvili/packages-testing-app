@@ -7470,16 +7470,16 @@
         },
         {
             "name": "tsitsishvili/elastic-audit",
-            "version": "v4.0.0",
+            "version": "v4.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/tsitsishvili/elastic-audit.git",
-                "reference": "c46beafc0f4a656148534a39790d1fdea4333634"
+                "reference": "325a76406676c8c0d6126e41c5eb05ef613b62d9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/tsitsishvili/elastic-audit/zipball/c46beafc0f4a656148534a39790d1fdea4333634",
-                "reference": "c46beafc0f4a656148534a39790d1fdea4333634",
+                "url": "https://api.github.com/repos/tsitsishvili/elastic-audit/zipball/325a76406676c8c0d6126e41c5eb05ef613b62d9",
+                "reference": "325a76406676c8c0d6126e41c5eb05ef613b62d9",
                 "shasum": ""
             },
             "require": {
@@ -7491,6 +7491,8 @@
                 "psr/http-message": "^1.1 || ^2.0"
             },
             "require-dev": {
+                "larastan/larastan": "^3.10",
+                "laravel/pint": "^1.29",
                 "orchestra/testbench": "^10.0 || ^11.0",
                 "phpunit/phpunit": "^10.0 || ^11.0 || ^12.0"
             },
@@ -7539,9 +7541,9 @@
             ],
             "support": {
                 "issues": "https://github.com/tsitsishvili/elastic-audit/issues",
-                "source": "https://github.com/tsitsishvili/elastic-audit/tree/v4.0.0"
+                "source": "https://github.com/tsitsishvili/elastic-audit/tree/v4.1.0"
             },
-            "time": "2026-07-22T14:29:07+00:00"
+            "time": "2026-07-23T18:15:55+00:00"
         },
         {
             "name": "vlucas/phpdotenv",
