@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "03d2b7030927e1ba0dbda272351cf5c2",
+    "content-hash": "433cdcb33a6bc925daba8df78bb018a9",
     "packages": [
         {
             "name": "brick/math",
@@ -7470,16 +7470,16 @@
         },
         {
             "name": "tsitsishvili/elastic-audit",
-            "version": "v4.1.0",
+            "version": "v4.x-dev",
             "source": {
                 "type": "git",
                 "url": "https://github.com/tsitsishvili/elastic-audit.git",
-                "reference": "325a76406676c8c0d6126e41c5eb05ef613b62d9"
+                "reference": "3c92c07e2927d0541f4bfc26fcaf1370eae32a35"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/tsitsishvili/elastic-audit/zipball/325a76406676c8c0d6126e41c5eb05ef613b62d9",
-                "reference": "325a76406676c8c0d6126e41c5eb05ef613b62d9",
+                "url": "https://api.github.com/repos/tsitsishvili/elastic-audit/zipball/3c92c07e2927d0541f4bfc26fcaf1370eae32a35",
+                "reference": "3c92c07e2927d0541f4bfc26fcaf1370eae32a35",
                 "shasum": ""
             },
             "require": {
@@ -7541,9 +7541,9 @@
             ],
             "support": {
                 "issues": "https://github.com/tsitsishvili/elastic-audit/issues",
-                "source": "https://github.com/tsitsishvili/elastic-audit/tree/v4.1.0"
+                "source": "https://github.com/tsitsishvili/elastic-audit/tree/v4.x"
             },
-            "time": "2026-07-23T18:15:55+00:00"
+            "time": "2026-07-30T12:54:09+00:00"
         },
         {
             "name": "vlucas/phpdotenv",
@@ -10251,7 +10251,8 @@
     "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": {
-        "tsitsishvili/documentator": 20
+        "tsitsishvili/documentator": 20,
+        "tsitsishvili/elastic-audit": 20
     },
     "prefer-stable": true,
     "prefer-lowest": false,
