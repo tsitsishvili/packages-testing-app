@@ -90,7 +90,9 @@ class WebhookController extends Controller
 
         $succeeded = rand(0, 1) || (bool) rand(0, 1);
         $provider = rand(0, 1) ? Provider::Stripe->value : Provider::Crypto->value;
-        $orderId = Str::uuid();
+        // Cast to string: the middleware only accepts string|int attributes and
+        // silently records `unknown` for anything else, Uuid objects included.
+        $orderId = (string) Str::uuid();
 
         $request->attributes->set('third_party_provider', $provider);
         $request->attributes->set(

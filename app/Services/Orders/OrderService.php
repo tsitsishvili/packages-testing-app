@@ -9,9 +9,12 @@ use App\Models\Order;
 use App\Models\User;
 use App\Repositories\OrderRepository;
 use App\Repositories\ProductRepository;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Spatie\LaravelData\Optional;
+use Tsitsishvili\ElasticAudit\DataTransferObjects\ActivityLogContext;
+use Tsitsishvili\ElasticAudit\Facades\ActivityLog;
 
 /**
  * Application service for the order lifecycle. Prices each requested line from
@@ -65,9 +68,32 @@ class OrderService
         ], $lines);
     }
 
+    /**
+     * `ActivityLoggable` already logs the underlying `updated` diff, but a
+     * cancellation is a domain event in its own right. Recording it explicitly
+     * gives the activity dashboard an `order.cancelled` action to filter on;
+     * elastic-audit attaches the service identity and the HTTP route/controller
+     * that issued it automatically.
+     */
     public function cancel(Order $order): Order
     {
+        $previousStatus = $order->status;
+
         $order->update(['status' => OrderStatus::Cancelled]);
+
+        ActivityLog::record(
+            action: 'order.cancelled',
+            context: ActivityLogContext::forActor(
+                actorType: 'user',
+                actorId: Auth::id() ?? $order->user_id,
+                entityType: 'order',
+                entityId: (string) $order->getKey(),
+            ),
+            changes: [
+                'status' => ['old' => $previousStatus->value, 'new' => OrderStatus::Cancelled->value],
+            ],
+            metadata: ['reference' => $order->reference],
+        );
 
         return $order->load('items.product');
     }

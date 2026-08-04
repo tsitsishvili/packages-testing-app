@@ -73,6 +73,19 @@ return [
             'replace_placeholders' => true,
         ],
 
+        /*
+         * Dedicated stream for elastic-audit's own failures (see
+         * App\Listeners\ReportAuditOperationFailure). Kept off the default
+         * channel so a broken audit pipeline is alertable on its own.
+         */
+        'audit' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/audit.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'days' => env('LOG_DAILY_DAYS', 14),
+            'replace_placeholders' => true,
+        ],
+
         'slack' => [
             'driver' => 'slack',
             'url' => env('LOG_SLACK_WEBHOOK_URL'),

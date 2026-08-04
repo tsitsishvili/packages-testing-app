@@ -63,6 +63,14 @@ Both packages have local checkouts under `../../packages/<name>` (sibling `Deskt
 - **`tsitsishvili/documentator`** — generates interactive OpenAPI docs from routes/FormRequests/Resources, served at `/docs` for `api/*` routes (config: `config/documentator.php`). Access is gated by `Documentator::auth()`, currently wired open (`fn () => true`) in `AppServiceProvider::boot()` — tighten before production.
 - **`tsitsishvili/elastic-audit`** — logs outgoing/incoming HTTP traffic and actor/model activity to a separate Elasticsearch cluster, with redaction, sampling, and dashboards at `/logger/*` (configs: `config/http_logs.php`, `config/activity_logs.php`, `config/log_elasticsearch.php`). The app must supply backed enums in `app/Enums/ElasticAudit/` implementing the package's `Provider`/`EventType`/`EntityType` contracts; these are referenced from `config/http_logs.php` under `enums`. Adding a `Provider` case requires bumping `HttpLogData::SCHEMA_VERSION` (noted in that enum).
 
+### elastic-audit wiring in this app
+
+- Every audit document carries a **source**: `service.{name,environment}` (straight from `app.name` / `app.env` — `elastic-audit:health` flags an unchanged `Laravel` default) and `execution.{type,name,action}`, resolved automatically as `http` / `queue` / `console`, or pinned explicitly with `ExecutionOrigin::manual()` on the log context.
+- After any package upgrade that bumps `HttpLogData`/`ActivityLogData::SCHEMA_VERSION`, re-run `http-logs:create-index` + `activity-logs:create-index` (rolls the write alias onto the new strict mapping) and confirm with `elastic-audit:health --all`. Health reports stale mappings field by field.
+- Automatic model activity comes from `ActivityLoggable` on `Product`/`Order`. Explicit `ActivityLog::record()` calls live in `AggregateProductStatistics` (query-builder write — no Eloquent event fires — pinned to the manual origin `product.statistics_aggregation`) and `OrderService::cancel()` (domain event alongside the raw `order.updated` diff).
+- `App\Listeners\ReportAuditOperationFailure` mirrors the package's `AuditOperationFailed` event onto the dedicated `audit` log channel (`config/logging.php`). It is registered by **listener auto-discovery** — do not also register it in `AppServiceProvider`, or it fires twice.
+- Testing gotchas: Laravel suppresses `CommandStarting`/`CommandFinished` under tests, so a test that needs the `console` origin must call `$this->app->make(Kernel::class)->rerouteSymfonyCommandEvents()` first; and under the `sync` queue an indexing failure is reported twice (indexing stage, then the logger's capture guard).
+
 ===
 
 <laravel-boost-guidelines>
@@ -257,6 +265,8 @@ When changing an API endpoint:
 - Add `Tsitsishvili\Documentator\Attributes` only for gaps or intentional overrides.
 - Verify with `php artisan documentator:explain METHOD /uri` and
   `php artisan documentator:check`.
+- In feature tests, use `->assertMatchesDocumentation()` on changed endpoint
+  responses.
 
 Use the **`documentator-api-docs`** skill for the full workflow, inference map,
 attribute guidance, troubleshooting, contract checks, and examples.
@@ -268,22 +278,37 @@ attribute guidance, troubleshooting, contract checks, and examples.
 Elastic Audit records third-party HTTP traffic and actor/model activity in a dedicated Elasticsearch cluster. HTTP
 logs and activity logs are independent subsystems with separate configuration, queues, indexes, and dashboards.
 
-- Inspect `config/http_logs.php`, `config/activity_logs.php`, and `config/log_elasticsearch.php` before changing an
-  integration. Never edit the package files under `vendor/`.
+- Inspect `config/app.php`, `config/http_logs.php`, `config/activity_logs.php`, and `config/log_elasticsearch.php`
+  before changing an integration. Never edit the package files under `vendor/`.
 - Use `HttpLog::make(...)` instead of Laravel's `Http` facade when an outgoing provider request must be audited. It
-  returns an `Illuminate\Http\Client\PendingRequest`, so the normal Laravel HTTP client API remains available.
+  returns an `Illuminate\Http\Client\PendingRequest`, so fluent setup and single-request verbs remain available. Do not
+  use Laravel `pool()` / `batch()` for audited calls because they create separate requests without this middleware.
 - Pass existing backed enum cases implementing `ProviderContract`, `EventTypeContract`, and `EntityTypeContract` to
   HTTP logging APIs. Inspect the consuming application's registered enum classes and never invent enum cases.
 - For incoming callbacks, use `IncomingHttpLogMiddleware` and set `third_party_*` request attributes from trusted
   application code. Never derive provider, event, or entity types from user-controlled request input.
 - Use `ActivityLog::record(...)` for explicit domain events and `ActivityLoggable` for automatic Eloquent lifecycle
   events. Activity entity and actor types are free string labels.
+- Give every application writing to shared aliases a stable, unique `APP_NAME`. Indexed `service.*` and `execution.*`
+  fields are snapshotted before queue dispatch.
+- Raw SQL/query-builder writes bypass `ActivityLoggable`; call `ActivityLog::record(...)` explicitly with domain
+  changes. Do not use `DB::listen()` as a substitute for an activity audit trail.
 - Logging dispatches queued jobs. Keep the configured queue worker running and use `Bus::fake()` when asserting job
   dispatch in tests; unit tests should not require a live Elasticsearch cluster.
+- Complete capture or terminal indexing failures emit a sanitized `AuditOperationFailed` Laravel event. It contains no
+  raw exception, headers, payloads, changes, or arbitrary metadata.
 - Review redaction before capturing new headers, fields, or metadata. Treat every `redaction.allow` entry as a security
   exception because allowed values are stored in clear text.
-- After infrastructure or configuration changes, run `php artisan elastic-audit:health --all`. Install the lifecycle
-  policy before creating HTTP or activity indexes on a fresh environment.
+- Undecodable bodies default to headers plus a raw-body hash. `HTTP_LOGS_UNDECODABLE_BODY_MODE=preview` stores them in
+  clear text and needs explicit security review. Bodies over the 1 MB default capture cap are headers-only.
+- Successful incoming callbacks are queued in terminable middleware after the response is sent. Activity jobs dispatch
+  after database commit, so rolled-back changes intentionally produce no activity document.
+- After infrastructure or configuration changes, run `php artisan elastic-audit:health`; add `--json` for deployment
+  automation. Use `--all` only when aliases for disabled subsystems have also been provisioned and should be checked.
+  Install the lifecycle policy before creating HTTP or activity indexes on a fresh environment.
+- Finite `retentionDays` values must be `1`–`32767`; use `retainForever: true` for a permanent event and never pass both.
+  Permanent documents are ignored by prune commands, but permanent storage also requires
+  `log_elasticsearch.lifecycle.delete_enabled=false` because ILM deletes whole indexes independently.
 
 <!-- Outgoing audited request -->
 ```php

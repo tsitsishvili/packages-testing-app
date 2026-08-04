@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Fixtures;
 
 use Closure;
+use Throwable;
 use Tsitsishvili\ElasticAudit\Services\Elasticsearch\LogElasticsearchClientInterface;
 
 /**
@@ -62,6 +63,9 @@ final class RecordingElasticsearchClient implements LogElasticsearchClientInterf
     /** Response returned from rollover(). Defaults to a successful roll-over. */
     public array $rolloverResponse = ['rolled_over' => true];
 
+    /** When set, index() throws it — used to drive the audit failure path. */
+    public ?Throwable $indexException = null;
+
     public function ping(): bool
     {
         return true;
@@ -80,6 +84,10 @@ final class RecordingElasticsearchClient implements LogElasticsearchClientInterf
 
     public function index(array $params): void
     {
+        if ($this->indexException !== null) {
+            throw $this->indexException;
+        }
+
         $this->indexCalls[] = $params;
     }
 
