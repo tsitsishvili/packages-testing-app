@@ -7393,12 +7393,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/tsitsishvili/documentator.git",
-                "reference": "f7ab3837de08b63160087565e19830c0337f4021"
+                "reference": "577caf771de8cc0838eb9f735ffe4b5a143b4dec"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/tsitsishvili/documentator/zipball/f7ab3837de08b63160087565e19830c0337f4021",
-                "reference": "f7ab3837de08b63160087565e19830c0337f4021",
+                "url": "https://api.github.com/repos/tsitsishvili/documentator/zipball/577caf771de8cc0838eb9f735ffe4b5a143b4dec",
+                "reference": "577caf771de8cc0838eb9f735ffe4b5a143b4dec",
                 "shasum": ""
             },
             "require": {
@@ -7455,18 +7455,21 @@
                 "laravel",
                 "laravel-package",
                 "openapi",
+                "openapi31",
                 "openapi32",
                 "php",
                 "php-attributes",
                 "rest-api",
                 "scalar",
-                "swagger"
+                "swagger",
+                "typescript",
+                "webhooks"
             ],
             "support": {
                 "issues": "https://github.com/tsitsishvili/documentator/issues",
                 "source": "https://github.com/tsitsishvili/documentator/tree/v2.x"
             },
-            "time": "2026-07-24T07:29:52+00:00"
+            "time": "2026-08-04T16:35:19+00:00"
         },
         {
             "name": "tsitsishvili/elastic-audit",
