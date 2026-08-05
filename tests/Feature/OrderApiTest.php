@@ -37,7 +37,8 @@ class OrderApiTest extends TestCase
             ->assertJsonPath('status', 'pending')
             ->assertJsonPath('total', 130)
             ->assertJsonCount(2, 'items')
-            ->assertJsonPath('items.0.line_total', 30);
+            ->assertJsonPath('items.0.line_total', 30)
+            ->assertMatchesDocumentation();
 
         $this->assertDatabaseHas('orders', ['user_id' => $user->id, 'total' => 130.00]);
         $this->assertDatabaseCount('order_items', 2);
@@ -199,7 +200,8 @@ class OrderApiTest extends TestCase
         ])->assertCreated()
             ->assertJsonPath('tracking_number', 'AB123456789CD')
             ->assertJsonPath('weight_grams', 1500)
-            ->assertJsonPath('parcel_count', 2);
+            ->assertJsonPath('parcel_count', 2)
+            ->assertMatchesDocumentation();
 
         $this->assertDatabaseHas('shipments', ['order_id' => $order->id, 'carrier' => 'fedex']);
         $this->assertDatabaseHas('orders', ['id' => $order->id, 'status' => 'shipped']);
@@ -229,7 +231,8 @@ class OrderApiTest extends TestCase
 
         $this->actingAs($user)->getJson("/api/orders/{$order->id}/shipment")
             ->assertOk()
-            ->assertJsonPath('tracking_number', 'ZZ000000000ZZ');
+            ->assertJsonPath('tracking_number', 'ZZ000000000ZZ')
+            ->assertMatchesDocumentation();
     }
 
     public function test_it_imports_orders_from_an_uploaded_file(): void
@@ -248,6 +251,7 @@ class OrderApiTest extends TestCase
         ])->assertStatus(202)
             ->assertJsonPath('accepted', true)
             ->assertJsonPath('rows', 2)
-            ->assertJsonPath('dry_run', true);
+            ->assertJsonPath('dry_run', true)
+            ->assertMatchesDocumentation();
     }
 }

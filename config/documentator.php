@@ -16,7 +16,10 @@ return [
 
     'title' => env('DOCUMENTATOR_TITLE', config('app.name').' API'),
     'version' => env('DOCUMENTATOR_VERSION', '1.2.0'),
-    'description' => env('DOCUMENTATOR_DESCRIPTION', 'A description of your API.'),
+    'description' => env(
+        'DOCUMENTATOR_DESCRIPTION',
+        'Reference API for authentication, catalog, order, and audited integration flows.',
+    ),
 
     /*
     |--------------------------------------------------------------------------
@@ -46,8 +49,7 @@ return [
     */
 
     'servers' => [
-        ['url' => env('APP_URL', 'http://localhost'), 'description' => 'Default'],
-        ['url' => env('APP_URL', 'https://tester-app.com'), 'description' => 'Production'],
+        ['url' => env('APP_URL', 'http://localhost'), 'description' => 'Application'],
     ],
 
     /*
@@ -160,11 +162,6 @@ return [
             'type' => 'http',
             'scheme' => 'bearer',
             'description' => 'Pass an API token as a Bearer header.',
-        ],
-        'admin' => [
-            'type' => 'http',
-            'scheme' => 'bearer',
-            'description' => 'An admin-scoped Bearer token. Referenced by #[Authenticated(\'admin\')] on privileged endpoints such as deleting an order.',
         ],
     ],
 

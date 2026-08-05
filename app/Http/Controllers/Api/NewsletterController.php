@@ -20,7 +20,7 @@ use Tsitsishvili\Documentator\Attributes\Summary;
 class NewsletterController extends Controller
 {
     #[Summary('Subscribe to the newsletter')]
-    #[Description('Registers an email address for the newsletter. Body parameters are inferred from `SubscribeNewsletterRequest::rules()`.')]
+    #[Description('Validates newsletter preferences and returns an acknowledgement. This integration fixture does not persist the subscription.')]
     public function subscribe(SubscribeNewsletterRequest $request): JsonResponse
     {
         $validated = $request->validated();

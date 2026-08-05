@@ -19,7 +19,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('logout', [AuthController::class, 'logout']);
 });
 
-// Newsletter — inline ($request->validate) validation, no FormRequest/DTO.
+// Newsletter subscription-payload validation through a typed FormRequest.
 Route::post('newsletter/subscribe', [NewsletterController::class, 'subscribe']);
 
 // Public reads.

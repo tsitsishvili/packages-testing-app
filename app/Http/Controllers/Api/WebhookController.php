@@ -29,13 +29,14 @@ class WebhookController extends Controller
      * pass.
      *
      * IncomingHttpLogMiddleware (attached to this route) records the request to
-     * elastic-audit. It reads provider/event/entity from request *attributes*
-     * — never URL segments — so we set them here, server-side, before returning.
+     * elastic-audit. This fixture deliberately varies the simulated provider,
+     * event and success result; it is not a production Stripe handler.
      */
-    #[Summary('Stripe payment webhook')]
-    #[Description('Receives Stripe payment callbacks. Logged by elastic-audit as an incoming HTTP request (provider `stripe`).')]
+    #[Summary('Process a demo payment webhook')]
+    #[Description('Validates a partial payment-event payload and records simulated provider metadata through Elastic Audit. The fixture does not verify webhook signatures and may return a simulated failure.')]
     #[RequestMediaType('application/json')]
-    #[ApiResponse(status: 200, example: ['received' => true])]
+    #[ApiResponse(status: 200, type: 'array{received: bool}', description: 'Demo callback accepted.', example: ['received' => true])]
+    #[ApiResponse(status: 422, type: 'array{received: bool}|array{message: string, errors: object}', description: 'Payload validation failed or the fixture simulated a callback failure.', example: ['received' => false])]
     public function stripe(
         Request $request
     ): JsonResponse {

@@ -21,7 +21,8 @@ class AuthTest extends TestCase
         ]);
 
         $response->assertCreated()
-            ->assertJsonStructure(['token', 'user' => ['id', 'name', 'email']]);
+            ->assertJsonStructure(['token', 'user' => ['id', 'name', 'email']])
+            ->assertMatchesDocumentation();
 
         $this->assertDatabaseHas('users', ['email' => 'ada@example.com']);
     }
@@ -75,7 +76,8 @@ class AuthTest extends TestCase
         $this->actingAs($user)
             ->getJson('/api/user')
             ->assertOk()
-            ->assertJsonPath('data.email', $user->email);
+            ->assertJsonPath('data.email', $user->email)
+            ->assertMatchesDocumentation();
     }
 
     public function test_guest_cannot_fetch_profile(): void

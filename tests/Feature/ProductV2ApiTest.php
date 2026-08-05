@@ -27,7 +27,8 @@ class ProductV2ApiTest extends TestCase
             ->assertJsonPath('data.pricing.amount', 12.34)
             ->assertJsonPath('data.pricing.formatted', '12.34')
             ->assertJsonPath('data.links.self', url("/api/v2/products/{$product->id}"))
-            ->assertJsonStructure(['data' => ['timestamps' => ['created_at', 'updated_at']]]);
+            ->assertJsonStructure(['data' => ['timestamps' => ['created_at', 'updated_at']]])
+            ->assertMatchesDocumentation();
     }
 
     public function test_it_lists_products_in_the_v2_shape(): void
@@ -79,7 +80,8 @@ class ProductV2ApiTest extends TestCase
         ])
             ->assertCreated()
             ->assertJsonPath('data.name', 'Widget')
-            ->assertJsonPath('data.pricing.amount', 10.5);
+            ->assertJsonPath('data.pricing.amount', 10.5)
+            ->assertMatchesDocumentation();
 
         $this->assertDatabaseHas('products', ['name' => 'Widget']);
     }

@@ -18,14 +18,10 @@ use Illuminate\Http\Response;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 use Tsitsishvili\Documentator\Attributes\Authenticated;
-use Tsitsishvili\Documentator\Attributes\CookieParam;
 use Tsitsishvili\Documentator\Attributes\Description;
 use Tsitsishvili\Documentator\Attributes\Group;
-use Tsitsishvili\Documentator\Attributes\HeaderParam;
 use Tsitsishvili\Documentator\Attributes\QueryParam;
 use Tsitsishvili\Documentator\Attributes\Response as ApiResponse;
-use Tsitsishvili\Documentator\Attributes\ResponseHeader;
-use Tsitsishvili\Documentator\Attributes\Server;
 use Tsitsishvili\Documentator\Attributes\Summary;
 use Tsitsishvili\Documentator\Attributes\TagDescription;
 use Tsitsishvili\ElasticAudit\DataTransferObjects\HttpLogContext;
@@ -35,10 +31,22 @@ use Tsitsishvili\ElasticAudit\Facades\HttpLog;
 #[TagDescription('Browse and manage the product catalog. Public reads; writes require a `Bearer` token.')]
 class ProductController extends Controller
 {
+    private const string PRODUCT_RESPONSE_TYPE = 'array{data: array{id: int, name: string, description: string|null, price: string, created_at: date-time, updated_at: date-time}}';
+
+    private const array PRODUCT_RESPONSE_EXAMPLE = [
+        'data' => [
+            'id' => 1,
+            'name' => 'Reference product',
+            'description' => 'A product returned by the integration fixture.',
+            'price' => '19.99',
+            'created_at' => '2026-08-04T12:00:00.000000Z',
+            'updated_at' => '2026-08-04T12:00:00.000000Z',
+        ],
+    ];
+
     #[Summary('List products')]
     #[Description('Returns a paginated list of products, newest first.')]
-    #[QueryParam('per_page', type: 'integer', required: false, description: 'Items per page (1–100, default 15).', example: 15)]
-    #[CookieParam('preview_token', description: 'Opaque token that also surfaces unpublished products in the listing.', example: 'pv_9f40d932c4c0')]
+    #[QueryParam('per_page', type: 'integer', required: false, description: 'Items requested per page. Values above 100 are capped; the default is 15.', example: 15)]
     #[ApiResponse(status: 200, resource: ProductResource::class, paginated: true)]
     public function index(): ProductCollection
     {
@@ -50,7 +58,7 @@ class ProductController extends Controller
     }
 
     #[Summary('Search the product catalog')]
-    #[Description('Filters, sorts and includes related data via spatie/laravel-query-builder. The `filter[...]`, `sort`, `include` and `fields[...]` query parameters below are inferred from the allowed lists; results are JSON:API paginated (`page[number]` / `page[size]`) via spatie/laravel-json-api-paginate — both the pagination query params and the response envelope are inferred from the return statement.')]
+    #[Description('Accepts name or price filters, supported sorts, relationship includes, sparse field selection, and JSON:API pagination parameters through the Query Builder integration fixture.')]
     public function search(): AnonymousResourceCollection
     {
         return ProductResource::collection(
@@ -68,11 +76,9 @@ class ProductController extends Controller
     }
 
     #[Summary('Create a product')]
-    #[Description('Creates a product from the validated payload and returns it with a `201` status. The body is inferred from `StoreProductRequest::rules()`.')]
+    #[Description('Creates a product from the validated payload.')]
     #[Authenticated]
-    #[HeaderParam('Idempotency-Key', required: false, description: 'Client-supplied key; replaying a request with the same key returns the original result instead of creating a duplicate.', example: 'a1b2c3d4-e5f6')]
-    #[ApiResponse(status: 201, resource: ProductResource::class, description: 'Product created.')]
-    #[ResponseHeader(201, 'Location', description: 'Canonical URL of the newly created product.', example: '/api/products/101')]
+    #[ApiResponse(status: 201, type: self::PRODUCT_RESPONSE_TYPE, description: 'Product created.', example: self::PRODUCT_RESPONSE_EXAMPLE)]
     public function store(StoreProductRequest $request): JsonResponse
     {
         $product = Product::create($request->validated());
@@ -84,16 +90,16 @@ class ProductController extends Controller
 
     #[Summary('Show a product')]
     #[Description('Returns a single product resolved by its ID.')]
-    #[ApiResponse(status: 200, resource: ProductResource::class)]
+    #[ApiResponse(status: 200, type: self::PRODUCT_RESPONSE_TYPE, example: self::PRODUCT_RESPONSE_EXAMPLE)]
     public function show(Product $product): ProductResource
     {
         return ProductResource::make($product);
     }
 
     #[Summary('Update a product')]
-    #[Description('Updates the product from the validated payload and returns the fresh resource. The body is inferred from `UpdateProductRequest::rules()`.')]
+    #[Description('Updates the product from the validated payload and returns its current representation.')]
     #[Authenticated]
-    #[ApiResponse(status: 200, resource: ProductResource::class, description: 'Product updated.')]
+    #[ApiResponse(status: 200, type: self::PRODUCT_RESPONSE_TYPE, description: 'Product updated.', example: self::PRODUCT_RESPONSE_EXAMPLE)]
     public function update(UpdateProductRequest $request, Product $product): ProductResource
     {
         $product->update($request->validated());
@@ -123,10 +129,9 @@ class ProductController extends Controller
     }
 
     #[Summary('Sync a product to the external catalog')]
-    #[Description('Pushes the product to the external catalog service over HTTP. The outgoing call is recorded by elastic-audit (provider `catalog`, event `catalog.sync`).')]
+    #[Description('Performs a synchronous request to the demo JSONPlaceholder catalog endpoint and reports its status. Elastic Audit records the outgoing call as provider `catalog` and event `catalog.sync`.')]
     #[Authenticated]
-    #[Server('https://catalog.example.com', description: 'External product catalog service that receives the sync call.')]
-    #[ApiResponse(status: 200, description: 'Sync dispatched.', example: ['synced' => true, 'catalog_status' => 200])]
+    #[ApiResponse(status: 200, type: 'array{synced: bool, catalog_status: int}', description: 'Demo catalog request completed.', example: ['synced' => true, 'catalog_status' => 200])]
     public function sync(Product $product): JsonResponse
     {
         $context = HttpLogContext::forEntity(

@@ -4,20 +4,30 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-Laravel 12 / PHP 8.3 application. The one real domain feature is a **product statistics aggregation pipeline**; the rest is a stock Laravel skeleton plus two first-party Composer packages (`tsitsishvili/documentator`, `tsitsishvili/elastic-audit`). There is no front-end to speak of (Vite + Tailwind are present but unused beyond the welcome page).
+Laravel 13 / PHP 8.3+ integration and reference application for two
+first-party Composer packages (`tsitsishvili/documentator` and
+`tsitsishvili/elastic-audit`). The application exercises Sanctum
+authentication, product APIs in two versions, order workflows, an HTTP
+`QUERY` operation, upload and webhook fixtures, queued audit capture, and a
+scheduled product-statistics aggregation pipeline. It is a package test bed,
+not a production-ready application template.
+
+Start with `README.md`, `docs/SETUP.md`, `docs/DOCUMENTATOR.md`, and
+`docs/ELASTIC_AUDIT.md` for the maintained repository documentation.
 
 ## Commands
 
 ```bash
-composer dev          # run server + queue worker + log tailer (pail) + vite concurrently
+composer run dev      # run server + queue worker + log tailer (pail) + vite concurrently
 composer test         # clears config, then runs the full test suite
-composer setup        # first-time bootstrap: install, .env, key, migrate, npm build
+composer run setup    # first-time bootstrap: install, .env, key, migrate, npm build
 
 php artisan test --filter test_it_aggregates_add_to_cart_statistics   # single test
 php artisan test tests/Feature/StatisticsAggregationTest.php          # single file
 
 php artisan migrate
 php artisan product:aggregate-statistics      # the core aggregation command (also scheduled)
+php artisan schedule:work                     # run the local scheduler
 
 ./vendor/bin/pint     # format / lint (Laravel preset, no custom config)
 
@@ -25,7 +35,12 @@ npm run dev           # vite dev server only
 npm run build
 ```
 
-Package-provided artisan commands worth knowing: `documentator:generate` / `documentator:export` / `documentator:postman` / `documentator:check` (API docs; `check` audits generated docs for gaps/drift), and `elastic-audit`'s `*:create-*-index` and `*:prune-*` log index commands.
+Package-provided Artisan commands worth knowing:
+`documentator:generate`, `documentator:export`, `documentator:postman`,
+`documentator:typescript`, `documentator:explain`, and
+`documentator:check`; plus `elastic-audit:lifecycle-policy`,
+`elastic-audit:health`, `http-logs:create-index`,
+`activity-logs:create-index`, and each subsystem's rollover/prune commands.
 
 ## Database
 
@@ -60,7 +75,7 @@ This is the most common change. To add one:
 
 Both packages have local checkouts under `../../packages/<name>` (sibling `Desktop/packages/` dir). To develop against a checkout instead of the published release, add a Composer `path` repository (`symlink: true`) for it and require the branch's dev version, then `composer update <pkg>`. Gotcha: git branch `v1.x` normalizes to Composer version **`1.x-dev`** (not `dev-v1.x`), and you must require that exact dev version — a stable constraint like `^1.6` re-selects the published release from git/Packagist over the symlinked path. Verify with `ls -la vendor/tsitsishvili/<name>` (should be a symlink).
 
-- **`tsitsishvili/documentator`** — generates interactive OpenAPI docs from routes/FormRequests/Resources, served at `/docs` for `api/*` routes (config: `config/documentator.php`). Access is gated by `Documentator::auth()`, currently wired open (`fn () => true`) in `AppServiceProvider::boot()` — tighten before production.
+- **`tsitsishvili/documentator`** — generates interactive OpenAPI docs from routes/FormRequests/Resources for `api/*` routes (config: `config/documentator.php`). The `/docs` surface is disabled by default; when `DOCUMENTATOR_ENABLED=true`, access is gated by `Documentator::auth()`, currently wired open (`fn () => true`) in `AppServiceProvider::boot()` — tighten before enabling it outside local development.
 - **`tsitsishvili/elastic-audit`** — logs outgoing/incoming HTTP traffic and actor/model activity to a separate Elasticsearch cluster, with redaction, sampling, and dashboards at `/logger/*` (configs: `config/http_logs.php`, `config/activity_logs.php`, `config/log_elasticsearch.php`). The app must supply backed enums in `app/Enums/ElasticAudit/` implementing the package's `Provider`/`EventType`/`EntityType` contracts; these are referenced from `config/http_logs.php` under `enums`. Adding a `Provider` case requires bumping `HttpLogData::SCHEMA_VERSION` (noted in that enum).
 
 ### elastic-audit wiring in this app

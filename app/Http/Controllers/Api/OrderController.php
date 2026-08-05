@@ -19,7 +19,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
 use Tsitsishvili\Documentator\Attributes\Authenticated;
-use Tsitsishvili\Documentator\Attributes\BodyParam;
 use Tsitsishvili\Documentator\Attributes\Deprecated;
 use Tsitsishvili\Documentator\Attributes\Description;
 use Tsitsishvili\Documentator\Attributes\Group;
@@ -38,13 +37,30 @@ use Tsitsishvili\Documentator\Attributes\Summary;
 #[Authenticated]
 class OrderController extends Controller
 {
+    private const string SHIPMENT_RESPONSE_TYPE = 'array{id: int, order_id: int, tracking_number: string, carrier: string, weight_grams: int, declared_value: string, parcel_count: int, origin_ip: string, label_filename: string|null, shipped_at: date-time, created_at: date-time, updated_at: date-time}';
+
+    private const array SHIPMENT_RESPONSE_EXAMPLE = [
+        'id' => 1,
+        'order_id' => 42,
+        'tracking_number' => 'AB123456789CD',
+        'carrier' => 'fedex',
+        'weight_grams' => 1500,
+        'declared_value' => '199.99',
+        'parcel_count' => 2,
+        'origin_ip' => '10.0.0.1',
+        'label_filename' => 'label.jpg',
+        'shipped_at' => '2026-08-04T12:00:00.000000Z',
+        'created_at' => '2026-08-04T12:00:00.000000Z',
+        'updated_at' => '2026-08-04T12:00:00.000000Z',
+    ];
+
     public function __construct(
         private readonly OrderService $service,
         private readonly OrderRepository $orders,
     ) {}
 
     #[Summary('List orders')]
-    #[Description('Returns the authenticated user\'s orders, newest first. The filters are inferred as query parameters from `SearchOrdersData` because this is a GET route.')]
+    #[Description('Returns the authenticated user\'s orders, newest first, with optional status, currency, minimum-total, and pagination filters.')]
     #[ApiResponse(status: 200, resource: OrderResource::class, paginated: true)]
     public function index(SearchOrdersData $query): AnonymousResourceCollection
     {
@@ -54,7 +70,7 @@ class OrderController extends Controller
     }
 
     #[Summary('Query orders')]
-    #[Description('Searches orders with structured criteria sent in an HTTP `QUERY` request body. Documentator emits this as an OpenAPI 3.2 `query` operation instead of flattening the criteria into URI parameters.')]
+    #[Description('Searches the authenticated user\'s orders using structured criteria in an HTTP `QUERY` request body.')]
     #[ApiResponse(status: 200, resource: OrderResource::class, paginated: true)]
     public function query(SearchOrdersData $criteria): AnonymousResourceCollection
     {
@@ -66,17 +82,9 @@ class OrderController extends Controller
     /**
      * Place an order.
      *
-     * Creates an order for the authenticated user from a set of line items,
-     * pricing each line from the catalog. Both the request body and the 201
-     * response are inferred entirely from the `CreateOrderData` / `OrderData`
-     * objects — the summary/description here come straight from the docblock.
-     *
-     * The one exception is `gift_message`: it's a spatie `Optional` union
-     * (`string|Optional`), which documentator can't yet read — left to inference
-     * it mis-renders as an array — so we pin its schema with an explicit
-     * #[BodyParam]. (Attribute overrides run last and fully replace inference.)
+     * Creates an order for the authenticated user and prices every requested
+     * line from the server-side product catalog.
      */
-    #[BodyParam('gift_message', type: 'string', required: false, description: 'Optional gift message printed on the packing slip.', example: 'Happy birthday!')]
     public function store(CreateOrderData $data): OrderData
     {
         $order = $this->service->place($data, request()->user());
@@ -85,14 +93,14 @@ class OrderController extends Controller
     }
 
     #[Summary('Show an order')]
-    #[Description('Returns a single order with its line items and their products. The response shape is inferred from `OrderData`.')]
+    #[Description('Returns an order with its priced line items and product names.')]
     public function show(Order $order): OrderData
     {
         return OrderData::fromModel($order->load('items.product'));
     }
 
     #[Summary('Update an order')]
-    #[Description('Adjusts status, priority, notes or the scheduled date. The body is documented from `UpdateOrderRequest::rules()`.')]
+    #[Description('Adjusts an order\'s status, fulfillment priority, notes, or scheduled date.')]
     public function update(UpdateOrderRequest $request, Order $order): OrderData
     {
         $validated = $request->validated();
@@ -115,7 +123,6 @@ class OrderController extends Controller
     #[Summary('Cancel an order')]
     #[Description('Marks the order cancelled. **Deprecated** — prefer `DELETE /api/orders/{order}`.')]
     #[Deprecated]
-    #[ApiResponse(status: 200, description: 'Order cancelled.', example: ['cancelled' => true, 'status' => 'cancelled'])]
     public function cancel(Order $order): JsonResponse
     {
         $this->service->cancel($order);
@@ -127,8 +134,7 @@ class OrderController extends Controller
     }
 
     #[Summary('Delete an order')]
-    #[Description('Permanently deletes the order. Requires an admin token — documented with the non-default `admin` security scheme.')]
-    #[Authenticated('admin')]
+    #[Description('Permanently deletes the order. The route requires an authenticated Sanctum bearer token.')]
     #[ApiResponse(status: 204, description: 'Order deleted.')]
     public function destroy(Order $order): Response
     {
@@ -138,7 +144,8 @@ class OrderController extends Controller
     }
 
     #[Summary('Ship an order')]
-    #[Description('Records the shipment and marks the order shipped. The body is `multipart/form-data` because of the optional `label` image, and the response is the **bare `Shipment` model** — documentator types it from the model\'s $casts and `@property` docblock rather than a Resource.')]
+    #[Description('Creates a shipment, marks the order shipped, and returns the shipment. Send `multipart/form-data` when attaching the optional label image.')]
+    #[ApiResponse(status: 201, type: self::SHIPMENT_RESPONSE_TYPE, description: 'Shipment created.', example: self::SHIPMENT_RESPONSE_EXAMPLE)]
     public function ship(ShipOrderRequest $request, Order $order): Shipment
     {
         $shipment = $order->shipment()->create([
@@ -158,16 +165,18 @@ class OrderController extends Controller
     }
 
     #[Summary('Show an order\'s shipment')]
-    #[Description('Returns the bare `Shipment` model for an order.')]
+    #[Description('Returns the order\'s shipment. A missing order or an order without a shipment returns `404`.')]
     #[PathParam('order', type: 'integer', description: 'ID of the order whose shipment to return.', example: 42)]
+    #[ApiResponse(status: 200, type: self::SHIPMENT_RESPONSE_TYPE, example: self::SHIPMENT_RESPONSE_EXAMPLE)]
     public function shipment(Order $order): Shipment
     {
         return $order->shipment()->firstOrFail();
     }
 
     /**
-     * Internal reconciliation hook — excluded from the docs with #[Hidden] even
-     * though it lives on a documented (api/*) route.
+     * Reconciliation fixture — excluded from the docs with #[Hidden] even
+     * though it lives on a documented (api/*) route. Hidden controls
+     * documentation visibility, not route authorization.
      */
     #[Hidden]
     public function reconcile(Order $order): JsonResponse

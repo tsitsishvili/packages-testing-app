@@ -1,59 +1,134 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Packages Testing App
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+[![CI](https://github.com/tsitsishvili/packages-testing-app/actions/workflows/ci.yml/badge.svg)](https://github.com/tsitsishvili/packages-testing-app/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/tsitsishvili/packages-testing-app/actions/workflows/codeql.yml/badge.svg)](https://github.com/tsitsishvili/packages-testing-app/actions/workflows/codeql.yml)
 
-## About Laravel
+Packages Testing App is a Laravel 13 integration and reference application for
+[`tsitsishvili/documentator`](https://github.com/tsitsishvili/documentator) and
+[`tsitsishvili/elastic-audit`](https://github.com/tsitsishvili/elastic-audit).
+It exercises the packages against real authentication, product, order,
+statistics, webhook, queue, and scheduler flows.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+> This repository tracks development versions of both first-party packages and
+> deliberately exposes integration fixtures. Treat it as a test bed, not a
+> production-ready application template.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## What it demonstrates
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- OpenAPI 3.2 generation from Laravel routes, Form Requests, API Resources,
+  Eloquent models, Spatie Data objects, Spatie Query Builder, and Laravel
+  Actions.
+- Unversioned and `/api/v2` product APIs, including separate documentation
+  sections.
+- Sanctum personal access tokens for protected API operations.
+- Standard URI query parameters alongside an HTTP `QUERY` operation with a
+  structured request body.
+- Outgoing and incoming HTTP auditing, Eloquent activity auditing, redaction,
+  queues, Elasticsearch indexes, and operator dashboards.
+- Scheduled product-statistics aggregation with an explicit domain audit event.
 
-## Learning Laravel
+## Requirements
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+- PHP 8.3 or 8.4 and Composer 2.
+- Node.js `^20.19.0` or `>=22.12.0` and npm.
+- MySQL for the default local configuration. The test suite uses SQLite.
+- Elasticsearch 9 for the full Elastic Audit profile used by this lock file and
+  CI. It is optional when both audit subsystems are disabled.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## Quick start
 
-## Laravel Sponsors
+```bash
+git clone https://github.com/tsitsishvili/packages-testing-app.git
+cd packages-testing-app
+cp .env.example .env
+```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+Before running setup, create the configured MySQL database and review `.env`.
+In particular, choose a stable `APP_NAME` and `LOG_ELASTICSEARCH_INDEX_PREFIX`.
+For an API-only setup without Elasticsearch, disable both audit subsystems:
 
-### Premium Partners
+```dotenv
+HTTP_LOGS_ENABLED=false
+ACTIVITY_LOGS_ENABLED=false
+```
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+Install the PHP and frontend dependencies, generate the application key, run
+migrations, and build the frontend assets:
 
-## Contributing
+```bash
+composer run setup
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Start the application server, queue listener, Pail, and Vite:
 
-## Code of Conduct
+```bash
+composer run dev
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+The application is then available at `http://localhost:8000`. The setup script
+does not seed demo records; register through `POST /api/register` to obtain a
+Sanctum bearer token.
 
-## Security Vulnerabilities
+For scheduled statistics aggregation and audit health checks, run this in a
+separate terminal:
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```bash
+php artisan schedule:work
+```
+
+See [Local setup](docs/SETUP.md) for the complete API-only and Elasticsearch
+workflows.
+
+## API documentation
+
+Documentator is disabled by default. For local development, set:
+
+```dotenv
+DOCUMENTATOR_ENABLED=true
+DOCUMENTATOR_CACHE=false
+```
+
+The documentation landing page is then available at
+`http://localhost:8000/docs`, with separate API and API v2 sections. The access
+callback is currently permissive, so do not enable this surface on an untrusted
+deployment without replacing the callback in `AppServiceProvider`.
+
+Read [API and Documentator](docs/DOCUMENTATOR.md) for the documented surfaces,
+code-first inference map, generation commands, and verification workflow.
+
+## Elastic Audit
+
+The example environment enables HTTP logs, activity logs, queues, dashboards,
+and permanent retention. Initialize a reachable Elasticsearch cluster before
+using that profile, or disable the two audit subsystems as shown above.
+
+Read [Elastic Audit](docs/ELASTIC_AUDIT.md) for connection settings, index
+initialization, retention, redaction, dashboards, and operational commands.
+
+## Tests and quality checks
+
+The application tests do not require MySQL or a live Elasticsearch cluster:
+
+```bash
+composer test
+vendor/bin/pint --test
+npm ci
+npm run build
+```
+
+Audit and export the generated API contract with:
+
+```bash
+php artisan documentator:check
+php artisan documentator:generate
+php artisan documentator:export openapi.json
+```
+
+## Security
+
+Do not report vulnerabilities in public issues. Follow the private reporting
+process and deployment notes in [SECURITY.md](SECURITY.md).
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+This project is licensed under the [MIT License](LICENSE).

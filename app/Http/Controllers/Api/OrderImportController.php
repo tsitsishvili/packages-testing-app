@@ -16,9 +16,9 @@ use Tsitsishvili\Documentator\Attributes\Summary;
 #[Authenticated]
 class OrderImportController extends Controller
 {
-    #[Summary('Import orders from a file')]
-    #[Description('Bulk-imports orders from an uploaded CSV. The presence of the binary `file` field makes documentator describe the body as `multipart/form-data`.')]
-    #[ApiResponse(status: 202, description: 'Import accepted for processing.', example: ['accepted' => true, 'source' => 'shopify', 'rows' => 42, 'dry_run' => false])]
+    #[Summary('Validate an order-import file')]
+    #[Description('Validates an uploaded CSV or text file and returns its data-row count with the submitted import metadata. This integration fixture does not persist or queue imported orders.')]
+    #[ApiResponse(status: 202, type: 'array{accepted: bool, source: string, rows: int, dry_run: bool}', description: 'File validated.', example: ['accepted' => true, 'source' => 'shopify', 'rows' => 42, 'dry_run' => false])]
     public function store(ImportOrdersRequest $request): JsonResponse
     {
         $file = $request->file('file');

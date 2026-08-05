@@ -40,7 +40,10 @@ class AuditSourceTest extends ElasticAuditTestCase
         $user = User::factory()->create();
         $product = Product::factory()->create();
 
-        $this->actingAs($user)->postJson("/api/products/{$product->id}/sync")->assertOk();
+        $this->actingAs($user)
+            ->postJson("/api/products/{$product->id}/sync")
+            ->assertOk()
+            ->assertMatchesDocumentation();
 
         $doc = $this->es->lastIndexedDocument();
         $this->assertSame(config('app.name'), $doc['service']['name']);

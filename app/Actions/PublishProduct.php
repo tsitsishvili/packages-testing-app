@@ -4,6 +4,7 @@ namespace App\Actions;
 
 use App\Http\Resources\ProductResource;
 use App\Models\Product;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Carbon;
 use Lorisleiva\Actions\ActionRequest;
 use Lorisleiva\Actions\Concerns\AsController;
@@ -11,19 +12,33 @@ use Tsitsishvili\Documentator\Attributes\Authenticated;
 use Tsitsishvili\Documentator\Attributes\Description;
 use Tsitsishvili\Documentator\Attributes\Group;
 use Tsitsishvili\Documentator\Attributes\OperationId;
+use Tsitsishvili\Documentator\Attributes\Response as ApiResponse;
 use Tsitsishvili\Documentator\Attributes\Summary;
 
 /**
  * A lorisleiva/laravel-actions single-action controller. Documentator reads the
- * request body from `rules()` and the success response from the `handle()`
- * return type; the operation metadata comes from the attributes on
- * `asController()`, which is where the route points.
+ * request body from `rules()`; operation metadata and the explicit runtime
+ * response envelope come from attributes on `asController()`, which is where
+ * the route points.
  */
 #[Group('Products', version: 'v1')]
 #[Authenticated]
 class PublishProduct
 {
     use AsController;
+
+    private const string PRODUCT_RESPONSE_TYPE = 'array{data: array{id: int, name: string, description: string|null, price: string, created_at: date-time, updated_at: date-time}}';
+
+    private const array PRODUCT_RESPONSE_EXAMPLE = [
+        'data' => [
+            'id' => 1,
+            'name' => 'Reference product',
+            'description' => 'A product returned by the integration fixture.',
+            'price' => '19.99',
+            'created_at' => '2026-08-04T12:00:00.000000Z',
+            'updated_at' => '2026-08-04T12:00:00.000000Z',
+        ],
+    ];
 
     /**
      * @return array<string, array<int, string>>
@@ -37,19 +52,20 @@ class PublishProduct
         ];
     }
 
-    public function handle(Product $product, string $channel, ?Carbon $publishedAt = null): ProductResource
+    public function handle(Product $product, string $channel, ?Carbon $publishedAt = null): JsonResponse
     {
         // No dedicated column in this demo schema — touch() stands in for the
         // real "publish" side effect so the endpoint is exercisable end-to-end.
         $product->touch();
 
-        return ProductResource::make($product);
+        return ProductResource::make($product)->response();
     }
 
-    #[Summary('Publish a product')]
-    #[Description('Publishes a product to a sales channel. The request body is inferred from `PublishProduct::rules()` and the response from the `handle()` return type — no FormRequest or #[BodyParam] needed.')]
+    #[Summary('Run the product publication fixture')]
+    #[Description('Validates publication options and updates the product timestamp. This integration fixture does not persist channel-specific publication state or send subscriber notifications.')]
     #[OperationId('publishProduct')]
-    public function asController(ActionRequest $request, Product $product): ProductResource
+    #[ApiResponse(status: 200, type: self::PRODUCT_RESPONSE_TYPE, description: 'Publication fixture completed.', example: self::PRODUCT_RESPONSE_EXAMPLE)]
+    public function asController(ActionRequest $request, Product $product): JsonResponse
     {
         $validated = $request->validated();
 

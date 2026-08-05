@@ -43,23 +43,32 @@ public disclosure.
 
 ## Scope
 
-This policy covers this application and the two first-party packages it ships:
+This policy covers this application's code, configuration, and integrations
+with the following first-party packages:
 
-- `tsitsishvili/documentator`
-- `tsitsishvili/elastic-audit`
+- [`tsitsishvili/documentator`](https://github.com/tsitsishvili/documentator)
+- [`tsitsishvili/elastic-audit`](https://github.com/tsitsishvili/elastic-audit)
 
-Vulnerabilities in the Laravel framework or other third-party dependencies
-should be reported to their respective maintainers. For Laravel itself, see the
-[Laravel security policy](https://github.com/laravel/laravel/security/policy).
+If a vulnerability is isolated to one of those packages rather than this
+application's integration, report it privately to that package's maintainer or
+GitHub security-advisory channel. Vulnerabilities in Laravel or other third-party
+dependencies should also be reported to their respective maintainers. For
+Laravel itself, see the [Laravel security
+policy](https://github.com/laravel/laravel/security/policy).
 
 ## Security Considerations for Operators
 
 A few deployment notes specific to this project:
 
-- **API documentation access** (`/docs`) is gated by `Documentator::auth()`,
-  which is currently wired open (`fn () => true`) in `AppServiceProvider::boot()`.
-  Restrict this before exposing the app publicly.
+- **API documentation access** (`/docs`) is disabled by default. If
+  `DOCUMENTATOR_ENABLED=true`, access is gated by `Documentator::auth()`, whose
+  callback is currently wired open (`fn () => true`) in
+  `AppServiceProvider::boot()`. Replace it before exposing the app publicly.
 - **Audit log dashboards** (`/logger/*`) provided by `tsitsishvili/elastic-audit`
-  can surface request/response data; ensure access is restricted and that
-  redaction rules in `config/http_logs.php` are configured for your data.
+  can surface request/response data. Their default authorization is intended for
+  local use; add application authorization before exposing them and review the
+  redaction rules in `config/http_logs.php` for your data.
+- **Audit retention** in `.env.example` is permanent for both audit subsystems,
+  with the Elasticsearch ILM delete phase disabled. Adopt a finite retention
+  policy unless permanent storage is an explicit requirement.
 - Keep `APP_DEBUG=false` and a strong, unique `APP_KEY` in production.

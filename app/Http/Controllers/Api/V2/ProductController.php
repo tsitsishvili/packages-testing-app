@@ -33,9 +33,31 @@ use Tsitsishvili\ElasticAudit\Facades\HttpLog;
 #[TagDescription('v2 of the catalog API — same validation as v1 with richer, more structured response shapes. A distinct tag name (from v1\'s "Products") keeps the two versions from colliding when the exported spec is consumed by generic OpenAPI tooling.')]
 class ProductController extends Controller
 {
+    private const string PRODUCT_RESPONSE_TYPE = 'array{data: array{id: int, type: string, name: string, description: string|null, pricing: array{amount: float, formatted: string}, timestamps: array{created_at: date-time, updated_at: date-time}, links: array{self: string}}}';
+
+    private const array PRODUCT_RESPONSE_EXAMPLE = [
+        'data' => [
+            'id' => 1,
+            'type' => 'product',
+            'name' => 'Reference product',
+            'description' => 'A product returned by the integration fixture.',
+            'pricing' => [
+                'amount' => 19.99,
+                'formatted' => '19.99',
+            ],
+            'timestamps' => [
+                'created_at' => '2026-08-04T12:00:00.000000Z',
+                'updated_at' => '2026-08-04T12:00:00.000000Z',
+            ],
+            'links' => [
+                'self' => 'http://localhost:8000/api/v2/products/1',
+            ],
+        ],
+    ];
+
     #[Summary('List products')]
     #[Description('Returns a paginated list of products, newest first, in the v2 shape.')]
-    #[QueryParam('per_page', type: 'integer', required: false, description: 'Items per page (1–100, default 15).', example: 15)]
+    #[QueryParam('per_page', type: 'integer', required: false, description: 'Items requested per page. Values above 100 are capped; the default is 15.', example: 15)]
     #[ApiResponse(status: 200, resource: ProductResource::class, paginated: true)]
     public function index(): ProductCollection
     {
@@ -49,7 +71,7 @@ class ProductController extends Controller
     #[Summary('Create a product')]
     #[Description('Creates a product from the validated payload and returns it in the v2 shape with a `201` status.')]
     #[Authenticated]
-    #[ApiResponse(status: 201, resource: ProductResource::class, description: 'Product created.')]
+    #[ApiResponse(status: 201, type: self::PRODUCT_RESPONSE_TYPE, description: 'Product created.', example: self::PRODUCT_RESPONSE_EXAMPLE)]
     public function store(StoreProductRequest $request): JsonResponse
     {
         $product = Product::create($request->validated());
@@ -61,7 +83,7 @@ class ProductController extends Controller
 
     #[Summary('Show a product')]
     #[Description('Returns a single product resolved by its ID, in the v2 shape.')]
-    #[ApiResponse(status: 200, resource: ProductResource::class)]
+    #[ApiResponse(status: 200, type: self::PRODUCT_RESPONSE_TYPE, example: self::PRODUCT_RESPONSE_EXAMPLE)]
     public function show(Product $product): ProductResource
     {
         return ProductResource::make($product);
@@ -70,7 +92,7 @@ class ProductController extends Controller
     #[Summary('Update a product')]
     #[Description('Updates the product from the validated payload and returns the fresh resource in the v2 shape.')]
     #[Authenticated]
-    #[ApiResponse(status: 200, resource: ProductResource::class, description: 'Product updated.')]
+    #[ApiResponse(status: 200, type: self::PRODUCT_RESPONSE_TYPE, description: 'Product updated.', example: self::PRODUCT_RESPONSE_EXAMPLE)]
     public function update(UpdateProductRequest $request, Product $product): ProductResource
     {
         $product->update($request->validated());
@@ -100,9 +122,9 @@ class ProductController extends Controller
     }
 
     #[Summary('Sync a product to the external catalog')]
-    #[Description('Pushes the product to the external catalog service over HTTP. The outgoing call is recorded by elastic-audit (provider `catalog`, event `catalog.sync`).')]
+    #[Description('Performs a synchronous request to the demo JSONPlaceholder catalog endpoint and reports its status. Elastic Audit records the outgoing call as provider `catalog` and event `catalog.sync`.')]
     #[Authenticated]
-    #[ApiResponse(status: 200, description: 'Sync dispatched.', example: ['synced' => true, 'catalog_status' => 200])]
+    #[ApiResponse(status: 200, type: 'array{synced: bool, catalog_status: int}', description: 'Demo catalog request completed.', example: ['synced' => true, 'catalog_status' => 200])]
     public function sync(Product $product): JsonResponse
     {
         $context = HttpLogContext::forEntity(
