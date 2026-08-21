@@ -12,3 +12,17 @@ Schedule::command('product:aggregate-statistics')
 Schedule::command('elastic-audit:health')
     ->hourly()
     ->withoutOverlapping();
+
+/*
+ * Metrics and profiles are the only elastic-audit subsystems with finite
+ * retention here (HTTP and activity documents are permanent). ILM's delete phase
+ * is off cluster-wide to protect those permanent documents, so per-document
+ * pruning is what actually reclaims APM storage.
+ */
+Schedule::command('elastic-audit:metrics:prune')
+    ->dailyAt('03:10')
+    ->withoutOverlapping();
+
+Schedule::command('elastic-audit:profiles:prune')
+    ->dailyAt('03:20')
+    ->withoutOverlapping();

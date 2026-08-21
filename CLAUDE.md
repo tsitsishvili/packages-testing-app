@@ -88,6 +88,15 @@ Both packages have local checkouts under `../../packages/<name>` (sibling `Deskt
 - `App\Listeners\ReportAuditOperationFailure` mirrors the package's `AuditOperationFailed` event onto the dedicated `audit` log channel (`config/logging.php`). It is registered by **listener auto-discovery** — do not also register it in `AppServiceProvider`, or it fires twice.
 - Testing gotchas: Laravel suppresses `CommandStarting`/`CommandFinished` under tests, so a test that needs the `console` origin must call `$this->app->make(Kernel::class)->rerouteSymfonyCommandEvents()` first; and under the `sync` queue an indexing failure is reported twice (indexing stage, then the logger's capture guard).
 
+### Application performance monitoring (v5)
+
+- A third subsystem alongside the two loggers: transactions/spans in `app_metrics`, sampled PHP call stacks in `app_profiles`, dashboard at `/logger/metrics`. Config is `config/elastic_audit_metrics.php`; both index families use the same cluster as the loggers.
+- **Profiles need `ext-excimer`** (installed here via `pecl install excimer`). With `profiles.enabled=true` and no profiler extension, `elastic-audit:health` *fails* — and this app schedules health hourly.
+- Unlike HTTP/activity logs, metrics and profiles have **no retain-forever mode**. `LOG_ELASTICSEARCH_LIFECYCLE_DELETE_ENABLED=false` means ILM never deletes, so `elastic-audit:metrics:prune` / `:profiles:prune` (scheduled daily in `routes/console.php`) are the only thing reclaiming APM storage.
+- `ELASTIC_AUDIT_*_SAMPLE_RATE=1.0` here is a test-bed choice so every span type is reproducible; production wants the package defaults (profiles especially, at `0.01`).
+- Metrics are **disabled in `phpunit.xml`**. Under the `sync` queue their indexing runs inline through `Tests\Fixtures\RecordingElasticsearchClient`, so `lastIndexedDocument()` returns a metric document instead of the one under test. An app-level metrics test needs that fixture to filter by write alias first.
+- What is *not* measured: the package excludes its own delivery jobs, dashboards, and asset route automatically. `capture.commands.exclude` here additionally drops `elastic-audit:*` / `http-logs:*` / `activity-logs:*`. Add app noise via `capture.http.exclude_paths` and `capture.jobs.exclude` (`fnmatch` + `FNM_NOESCAPE`; paths carry no leading slash).
+
 ===
 
 <laravel-boost-guidelines>
