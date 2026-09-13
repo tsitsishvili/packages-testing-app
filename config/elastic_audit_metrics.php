@@ -22,6 +22,12 @@ return [
             'enabled' => env('ELASTIC_AUDIT_METRICS_HTTP_ENABLED', true),
             'sample_rate' => env('ELASTIC_AUDIT_METRICS_HTTP_SAMPLE_RATE', 1.0),
             'min_duration_ms' => env('ELASTIC_AUDIT_METRICS_HTTP_MIN_DURATION_MS', 0),
+            // Request paths that must never produce a transaction, as
+            // fnmatch() patterns without a leading slash, e.g. 'up',
+            // 'health/*'. Requests matched here are suppressed entirely, so
+            // their queries and outgoing calls are not recorded either. This
+            // package's own dashboards and assets are always excluded.
+            'exclude_paths' => [],
         ],
         'queries' => [
             'enabled' => env('ELASTIC_AUDIT_METRICS_QUERIES_ENABLED', true),
@@ -34,6 +40,12 @@ return [
             'enabled' => env('ELASTIC_AUDIT_METRICS_JOBS_ENABLED', true),
             'sample_rate' => env('ELASTIC_AUDIT_METRICS_JOBS_SAMPLE_RATE', 1.0),
             'min_duration_ms' => env('ELASTIC_AUDIT_METRICS_JOBS_MIN_DURATION_MS', 0),
+            // Job classes that must never produce a transaction or a publish
+            // span, as fnmatch() patterns, e.g. 'App\\Jobs\\Noisy*'. The whole
+            // run is suppressed, so the job's own queries are not recorded
+            // either. This package's audit and telemetry delivery jobs are
+            // always excluded.
+            'exclude' => [],
         ],
         'queue_publish' => [
             'enabled' => env('ELASTIC_AUDIT_METRICS_QUEUE_PUBLISH_ENABLED', true),
@@ -44,12 +56,14 @@ return [
             'enabled' => env('ELASTIC_AUDIT_METRICS_COMMANDS_ENABLED', true),
             'sample_rate' => env('ELASTIC_AUDIT_METRICS_COMMANDS_SAMPLE_RATE', 1.0),
             'min_duration_ms' => env('ELASTIC_AUDIT_METRICS_COMMANDS_MIN_DURATION_MS', 0),
-            // These commands own long-running processes. Their individual jobs
-            // and scheduled tasks remain observable as independent roots.
+            /*
+             * Commands whose timing describes something other than application
+             * work. The first group owns a long-running process, so its runtime
+             * is the process lifetime; the second measures a REPL session or a
+             * whole test suite. Jobs and scheduled tasks running inside an
+             * excluded command remain observable as independent roots.
+             */
             'exclude' => [
-                // Long-running processes: their runtime is the process
-                // lifetime, not a unit of work. `composer run dev` starts
-                // serve, queue:listen, and pail together.
                 'queue:work',
                 'queue:listen',
                 'schedule:work',
@@ -60,9 +74,6 @@ return [
                 'serve',
                 'pail',
 
-                // Development entrypoints. `php artisan test` times the whole
-                // suite as one transaction, which dominates p99 and the slowest
-                // groups; tinker times however long someone sat in the REPL.
                 'tinker',
                 'test',
                 'dusk',
@@ -89,6 +100,31 @@ return [
             'min_duration_ms' => env('ELASTIC_AUDIT_METRICS_OUTGOING_HTTP_MIN_DURATION_MS', 0),
             'include_path' => env('ELASTIC_AUDIT_METRICS_OUTGOING_HTTP_INCLUDE_PATH', true),
             'exclude_hosts' => [],
+        ],
+        /*
+         * Application code timed explicitly with Performance::measure(). Nothing
+         * is recorded until you wrap something, so this costs nothing until used.
+         */
+        /*
+         * Timing for application code. Explicit Performance::measure() calls are
+         * exact and cover every call; `automatic` instead reads this app's own
+         * frames out of each captured profile, so nothing has to be wrapped by
+         * hand. Automatic coverage equals profiles.sample_rate, and the Excimer
+         * sampling driver reports estimates — those land as
+         * `app.function.profiled` so they stay separable from exact ones.
+         */
+        'functions' => [
+            'enabled' => env('ELASTIC_AUDIT_METRICS_FUNCTIONS_ENABLED', true),
+            'sample_rate' => env('ELASTIC_AUDIT_METRICS_FUNCTIONS_SAMPLE_RATE', 1.0),
+            'min_duration_ms' => env('ELASTIC_AUDIT_METRICS_FUNCTIONS_MIN_DURATION_MS', 0),
+
+            'automatic' => env('ELASTIC_AUDIT_METRICS_FUNCTIONS_AUTOMATIC', false),
+            'automatic_limit' => env('ELASTIC_AUDIT_METRICS_FUNCTIONS_AUTOMATIC_LIMIT', 20),
+            'automatic_min_duration_ms' => env('ELASTIC_AUDIT_METRICS_FUNCTIONS_AUTOMATIC_MIN_DURATION_MS', 1.0),
+
+            // Empty falls back to the namespace Laravel resolves for this app
+            // (App\), which keeps vendor and framework frames out.
+            'namespaces' => [],
         ],
         'redis' => [
             'enabled' => env('ELASTIC_AUDIT_METRICS_REDIS_ENABLED', true),
