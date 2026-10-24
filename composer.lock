@@ -7473,16 +7473,16 @@
         },
         {
             "name": "tsitsishvili/elastic-audit",
-            "version": "v5.1.0",
+            "version": "v5.1.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/tsitsishvili/elastic-audit.git",
-                "reference": "315eb0093fa5d833ce42ba1756c331684ff6e4e3"
+                "reference": "d85545cc88a98cf147c8767c0f2898156e17b318"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/tsitsishvili/elastic-audit/zipball/315eb0093fa5d833ce42ba1756c331684ff6e4e3",
-                "reference": "315eb0093fa5d833ce42ba1756c331684ff6e4e3",
+                "url": "https://api.github.com/repos/tsitsishvili/elastic-audit/zipball/d85545cc88a98cf147c8767c0f2898156e17b318",
+                "reference": "d85545cc88a98cf147c8767c0f2898156e17b318",
                 "shasum": ""
             },
             "require": {
@@ -7548,9 +7548,9 @@
             ],
             "support": {
                 "issues": "https://github.com/tsitsishvili/elastic-audit/issues",
-                "source": "https://github.com/tsitsishvili/elastic-audit/tree/v5.1.0"
+                "source": "https://github.com/tsitsishvili/elastic-audit/tree/v5.1.1"
             },
-            "time": "2026-10-24T18:14:43+00:00"
+            "time": "2026-10-24T18:24:05+00:00"
         },
         {
             "name": "vlucas/phpdotenv",
