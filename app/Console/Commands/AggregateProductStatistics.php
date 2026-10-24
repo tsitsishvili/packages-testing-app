@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Repositories\ProductStatisticsRepository;
 use App\Services\Statistics\StatisticAggregationService;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 use Tsitsishvili\ElasticAudit\DataTransferObjects\ActivityLogContext;
 use Tsitsishvili\ElasticAudit\DataTransferObjects\ExecutionOrigin;
 use Tsitsishvili\ElasticAudit\Facades\ActivityLog;
@@ -46,7 +47,13 @@ class AggregateProductStatistics extends Command
             return array_merge($row, ['event_date' => $date]);
         });
 
-        $repository->upsert($data);
+        DB::transaction(function () use ($repository, $service, $data) {
+            $repository->upsert($data);
+
+            // Clearing only after the counts are durably written: a failure here
+            // leaves the events in place to be counted again, which beats losing them.
+            $service->flushConsumedEvents();
+        });
 
         $completionTime = microtime(true) - $start;
 

@@ -50,4 +50,14 @@ class StatisticAggregationService
             return $item;
         })->values();
     }
+
+    /**
+     * Discard the events counted by the last getAggregatedStatistics() call.
+     */
+    public function flushConsumedEvents(): void
+    {
+        foreach ($this->aggregators as $aggregator) {
+            $aggregator->flush();
+        }
+    }
 }

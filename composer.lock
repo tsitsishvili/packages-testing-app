@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1dfcad9262beb690628eeb86729de774",
+    "content-hash": "7eda09bb69f99b15107c1e6623eb8f30",
     "packages": [
         {
             "name": "brick/math",
@@ -7389,16 +7389,16 @@
         },
         {
             "name": "tsitsishvili/documentator",
-            "version": "v2.2.0",
+            "version": "v2.2.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/tsitsishvili/documentator.git",
-                "reference": "91c3a7838ab5b2813fe1015c3259a7f559946a55"
+                "reference": "6a4792d0cf8dbf566a7faefa293a59c8c9c7ed0b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/tsitsishvili/documentator/zipball/91c3a7838ab5b2813fe1015c3259a7f559946a55",
-                "reference": "91c3a7838ab5b2813fe1015c3259a7f559946a55",
+                "url": "https://api.github.com/repos/tsitsishvili/documentator/zipball/6a4792d0cf8dbf566a7faefa293a59c8c9c7ed0b",
+                "reference": "6a4792d0cf8dbf566a7faefa293a59c8c9c7ed0b",
                 "shasum": ""
             },
             "require": {
@@ -7467,22 +7467,22 @@
             ],
             "support": {
                 "issues": "https://github.com/tsitsishvili/documentator/issues",
-                "source": "https://github.com/tsitsishvili/documentator/tree/v2.2.0"
+                "source": "https://github.com/tsitsishvili/documentator/tree/v2.2.1"
             },
-            "time": "2026-08-11T19:44:04+00:00"
+            "time": "2026-10-24T17:21:45+00:00"
         },
         {
             "name": "tsitsishvili/elastic-audit",
-            "version": "v4.2.0",
+            "version": "v5.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/tsitsishvili/elastic-audit.git",
-                "reference": "1d8604b1de1bc1c0a5b4bd94b8a50302ca8369c4"
+                "reference": "9f06194e1f22570aa5b2206d3cf66d0e4dddb647"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/tsitsishvili/elastic-audit/zipball/1d8604b1de1bc1c0a5b4bd94b8a50302ca8369c4",
-                "reference": "1d8604b1de1bc1c0a5b4bd94b8a50302ca8369c4",
+                "url": "https://api.github.com/repos/tsitsishvili/elastic-audit/zipball/9f06194e1f22570aa5b2206d3cf66d0e4dddb647",
+                "reference": "9f06194e1f22570aa5b2206d3cf66d0e4dddb647",
                 "shasum": ""
             },
             "require": {
@@ -7498,6 +7498,10 @@
                 "laravel/pint": "^1.29",
                 "orchestra/testbench": "^10.0 || ^11.0",
                 "phpunit/phpunit": "^10.0 || ^11.0 || ^12.0"
+            },
+            "suggest": {
+                "ext-excimer": "Recommended low-overhead sampling profiler for continuous production profiles.",
+                "ext-xhprof": "Optional instrumentation profiler for detailed, opt-in PHP call profiles."
             },
             "type": "library",
             "extra": {
@@ -7527,7 +7531,7 @@
                     "role": "Maintainer"
                 }
             ],
-            "description": "Laravel package that logs third-party HTTP traffic (outgoing requests and incoming callbacks) and actor/model activity to a dedicated Elasticsearch cluster, with redaction, queued indexing, sampling, and optional dashboards.",
+            "description": "Laravel audit logging and application performance monitoring for Elasticsearch, with redaction, queued indexing, traces, profiles, and dashboards.",
             "keywords": [
                 "Audit",
                 "Guzzle",
@@ -7544,9 +7548,9 @@
             ],
             "support": {
                 "issues": "https://github.com/tsitsishvili/elastic-audit/issues",
-                "source": "https://github.com/tsitsishvili/elastic-audit/tree/v4.2.0"
+                "source": "https://github.com/tsitsishvili/elastic-audit/tree/v5.0.0"
             },
-            "time": "2026-08-12T06:04:18+00:00"
+            "time": "2026-10-24T18:07:28+00:00"
         },
         {
             "name": "vlucas/phpdotenv",

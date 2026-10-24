@@ -35,8 +35,15 @@ class ProductStatisticsRepository
 
             $updatableColumnQuery = [];
 
+            // MySQL/MariaDB expose the pending row as VALUES(col); SQLite and Postgres expose it as excluded.col.
+            $usesValuesSyntax = in_array(
+                DB::connection()->getDriverName(), ['mysql', 'mariadb'], true
+            );
+
             foreach ($updatableColumns as $column) {
-                $updatableColumnQuery[$column] = DB::raw("$column + VALUES($column)");
+                $incoming = $usesValuesSyntax ? "VALUES($column)" : "excluded.$column";
+
+                $updatableColumnQuery[$column] = DB::raw("$column + $incoming");
             }
 
             DB::table('product_statistics')->upsert(
