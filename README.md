@@ -29,7 +29,7 @@ statistics, webhook, queue, and scheduler flows.
 
 ## Requirements
 
-- PHP 8.3 or 8.4 and Composer 2.
+- PHP 8.4 and Composer 2.
 - Node.js `^20.19.0` or `>=22.12.0` and npm.
 - MySQL for the default local configuration. The test suite uses SQLite.
 - Elasticsearch 9 for the full Elastic Audit profile used by this lock file and
