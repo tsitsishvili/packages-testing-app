@@ -7353,16 +7353,16 @@
         },
         {
             "name": "tsitsishvili/documentator",
-            "version": "v2.3.0",
+            "version": "v2.4.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/tsitsishvili/documentator.git",
-                "reference": "ac027296df0fb1b7d4a125f3dc15f9b0a1e6c143"
+                "reference": "7d8922c1a26e529074bd6df22d87237c3f99d502"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/tsitsishvili/documentator/zipball/ac027296df0fb1b7d4a125f3dc15f9b0a1e6c143",
-                "reference": "ac027296df0fb1b7d4a125f3dc15f9b0a1e6c143",
+                "url": "https://api.github.com/repos/tsitsishvili/documentator/zipball/7d8922c1a26e529074bd6df22d87237c3f99d502",
+                "reference": "7d8922c1a26e529074bd6df22d87237c3f99d502",
                 "shasum": ""
             },
             "require": {
@@ -7431,22 +7431,22 @@
             ],
             "support": {
                 "issues": "https://github.com/tsitsishvili/documentator/issues",
-                "source": "https://github.com/tsitsishvili/documentator/tree/v2.3.0"
+                "source": "https://github.com/tsitsishvili/documentator/tree/v2.4.0"
             },
-            "time": "2026-11-01T17:17:34+00:00"
+            "time": "2026-11-27T18:34:46+00:00"
         },
         {
             "name": "tsitsishvili/elastic-audit",
-            "version": "v5.2.0",
+            "version": "v5.3.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/tsitsishvili/elastic-audit.git",
-                "reference": "2b428579c82a6df09a41ba8586ed57d47bd15034"
+                "reference": "ef9b4ae860052de2b78b1963d66a96bcaafe35be"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/tsitsishvili/elastic-audit/zipball/2b428579c82a6df09a41ba8586ed57d47bd15034",
-                "reference": "2b428579c82a6df09a41ba8586ed57d47bd15034",
+                "url": "https://api.github.com/repos/tsitsishvili/elastic-audit/zipball/ef9b4ae860052de2b78b1963d66a96bcaafe35be",
+                "reference": "ef9b4ae860052de2b78b1963d66a96bcaafe35be",
                 "shasum": ""
             },
             "require": {
@@ -7512,9 +7512,9 @@
             ],
             "support": {
                 "issues": "https://github.com/tsitsishvili/elastic-audit/issues",
-                "source": "https://github.com/tsitsishvili/elastic-audit/tree/v5.2.0"
+                "source": "https://github.com/tsitsishvili/elastic-audit/tree/v5.3.1"
             },
-            "time": "2026-11-01T17:06:33+00:00"
+            "time": "2026-11-27T19:25:56+00:00"
         },
         {
             "name": "vlucas/phpdotenv",
