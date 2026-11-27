@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-Laravel 13 / PHP 8.3+ integration and reference application for two
+Laravel 13 / PHP 8.4+ integration and reference application for two
 first-party Composer packages (`tsitsishvili/documentator` and
 `tsitsishvili/elastic-audit`). The application exercises Sanctum
 authentication, product APIs in two versions, order workflows, an HTTP

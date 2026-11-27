@@ -13,7 +13,7 @@ host.
 
 ## Prerequisites
 
-- PHP 8.3 or 8.4 with the extensions required by Laravel, MySQL, SQLite, and the
+- PHP 8.4 with the extensions required by Laravel, MySQL, SQLite, and the
   Elasticsearch client.
 - Composer 2.
 - Node.js `^20.19.0` or `>=22.12.0` and npm.

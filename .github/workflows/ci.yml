@@ -19,7 +19,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php: ['8.3', '8.4']
+        php: ['8.4']
 
     steps:
       - name: Checkout
@@ -72,7 +72,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
         with:
-          php-version: '8.3'
+          php-version: '8.4'
           extensions: mbstring, dom, fileinfo, curl, bcmath, pdo_sqlite, sqlite3
           coverage: none
           tools: composer:v2
@@ -129,7 +129,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
         with:
-          php-version: '8.3'
+          php-version: '8.4'
           coverage: none
           tools: composer:v2
 
@@ -207,8 +207,8 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
         with:
-          php-version: '8.3'
-          extensions: mbstring, dom, fileinfo, curl, bcmath, pdo_sqlite, sqlite3
+          php-version: '8.4'
+          extensions: mbstring, dom, fileinfo, curl, bcmath, pdo_sqlite, sqlite3, excimer
           coverage: none
           tools: composer:v2
 
@@ -239,15 +239,18 @@ jobs:
           exit 1
 
       # Create the ILM policy first (verifies the ILM PUT path), then the physical
-      # indexes plus read/write aliases for both subsystems.
+      # indexes plus read/write aliases for all four subsystems. .env.example
+      # enables metrics and profiles, so health fails without their indexes.
       - name: Create lifecycle policy and indexes
         run: |
           php artisan elastic-audit:lifecycle-policy
           php artisan http-logs:create-index
           php artisan activity-logs:create-index
+          php artisan elastic-audit:metrics:create-index
+          php artisan elastic-audit:profiles:create-index
 
-      # Passes only if both subsystems' read/write aliases resolve and their
-      # queues are configured.
+      # Passes only if every subsystem's read/write aliases resolve, their
+      # queues are configured, and a profiler extension (excimer) is loaded.
       - name: Health check
         run: php artisan elastic-audit:health
 
@@ -257,8 +260,12 @@ jobs:
         run: |
           php artisan http-logs:rollover
           php artisan activity-logs:rollover
+          php artisan elastic-audit:metrics:rollover
+          php artisan elastic-audit:profiles:rollover
           php artisan http-logs:prune
           php artisan activity-logs:prune
+          php artisan elastic-audit:metrics:prune
+          php artisan elastic-audit:profiles:prune
 
       # Independent assertion that the commands mutated the cluster rather than
       # just exiting 0. Names derive from LOG_ELASTICSEARCH_INDEX_PREFIX above.
@@ -267,5 +274,7 @@ jobs:
           set -e
           curl -fsS "http://127.0.0.1:9200/_alias/ci_logs_http_logs_write" >/dev/null
           curl -fsS "http://127.0.0.1:9200/_alias/ci_logs_activity_logs_write" >/dev/null
+          curl -fsS "http://127.0.0.1:9200/_alias/ci_logs_metrics_write" >/dev/null
+          curl -fsS "http://127.0.0.1:9200/_alias/ci_logs_profiles_write" >/dev/null
           curl -fsS "http://127.0.0.1:9200/_ilm/policy/ci_logs_elastic_audit_policy" >/dev/null
           echo "Aliases and ILM policy present."
